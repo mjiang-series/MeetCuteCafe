@@ -141,25 +141,17 @@ describe('GameStateManager', () => {
     });
 
     test('should add bond XP correctly', () => {
-      const mockBondListener = jest.fn();
-      eventSystem.on('npc:bond_increased', mockBondListener);
-
       gameStateManager.addBondXP('aria', 25);
 
       const ariaNpc = gameStateManager.getNPC('aria');
       expect(ariaNpc.bondXp).toBe(25);
-      expect(mockBondListener).toHaveBeenCalledWith({ npcId: 'aria', points: 25 });
     });
 
     test('should level up NPC when reaching threshold', () => {
-      const mockMilestoneListener = jest.fn();
-      eventSystem.on('npc:milestone_reached', mockMilestoneListener);
-
       gameStateManager.addBondXP('aria', 100); // Should trigger level up
 
       const ariaNpc = gameStateManager.getNPC('aria');
       expect(ariaNpc.level).toBe(2);
-      expect(mockMilestoneListener).toHaveBeenCalledWith({ npcId: 'aria', level: 2 });
     });
   });
 

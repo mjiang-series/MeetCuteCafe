@@ -6,6 +6,7 @@ import { EventSystem } from '@/systems/EventSystem';
 import { GameStateManager } from '@/systems/GameStateManager';
 import { AssetManager } from '@/systems/AssetManager';
 import { OrderGenerator } from '@/systems/OrderGenerator';
+import { NPCManager } from '@/systems/NPCManager';
 import { ScreenManager } from '@/ui/ScreenManager';
 import { PersistentHeader } from '@/ui/PersistentHeader';
 import { CafeHubScreen } from '@/ui/screens/CafeHubScreen';
@@ -20,6 +21,7 @@ class MeetCuteCafeGame {
   private gameStateManager: GameStateManager;
   private assetManager: AssetManager;
   private orderGenerator: OrderGenerator;
+  private npcManager: NPCManager;
   private screenManager: ScreenManager;
   private persistentHeader: PersistentHeader;
 
@@ -28,6 +30,7 @@ class MeetCuteCafeGame {
     this.gameStateManager = new GameStateManager(this.eventSystem);
     this.assetManager = new AssetManager(this.eventSystem);
     this.orderGenerator = new OrderGenerator(this.eventSystem);
+    this.npcManager = new NPCManager(this.eventSystem, this.gameStateManager);
     // ScreenManager and PersistentHeader will be initialized after UI setup
     this.screenManager = null as any; // Temporary
     this.persistentHeader = null as any; // Temporary
@@ -71,6 +74,10 @@ class MeetCuteCafeGame {
       // Start order generation
       this.orderGenerator.start();
       console.log('✅ Order generation started');
+
+      // Load NPC data from game state
+      this.npcManager.loadFromGameState();
+      console.log('✅ NPC Manager initialized');
 
       // Ensure persistent header is visible and set to cafe-hub variant
       this.eventSystem.emit('header:set_variant', { variant: 'cafe-hub' });
@@ -161,6 +168,7 @@ class MeetCuteCafeGame {
     gameStateManager: GameStateManager;
     assetManager: AssetManager;
     orderGenerator: OrderGenerator;
+    npcManager: NPCManager;
     screenManager: ScreenManager;
     persistentHeader: PersistentHeader;
   } {
@@ -169,6 +177,7 @@ class MeetCuteCafeGame {
       gameStateManager: this.gameStateManager,
       assetManager: this.assetManager,
       orderGenerator: this.orderGenerator,
+      npcManager: this.npcManager,
       screenManager: this.screenManager,
       persistentHeader: this.persistentHeader,
     };

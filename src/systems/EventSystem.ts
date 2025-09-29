@@ -18,13 +18,14 @@ export type EventMap = {
   // Character movement events
   'character:moved': { characterId: string; position: unknown };
 
+  // NPC and Bond events
+  'bond:xp_gained': { npcId: string; xpGained: number; totalXP: number; level: number; leveledUp: boolean };
+  'bond:level_up': { npcId: string; oldLevel: number; newLevel: number; milestone: unknown; npcName: string };
+  'dm:sent': { npcId: string; message: string };
+
   // Memory events
   'memory:created': { memory: unknown };
-  'memory:viewed': { memoryId: string };
-
-  // NPC events
-  'npc:bond_increased': { npcId: string; points: number };
-  'npc:milestone_reached': { npcId: string; level: number };
+  'memory:viewed': { memoryId: string; npcId?: string };
 
   // Gacha events
   'gacha:pull_started': { bannerId: string; count: number };

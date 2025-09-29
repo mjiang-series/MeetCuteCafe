@@ -251,10 +251,7 @@ export class GameStateManager {
     const newLevel = Math.floor(npc.bondXp / 100) + 1; // 100 XP per level
     if (newLevel > npc.level) {
       npc.level = newLevel;
-      this.eventSystem.emit('npc:milestone_reached', { npcId, level: newLevel });
     }
-    
-    this.eventSystem.emit('npc:bond_increased', { npcId, points: xp });
     this.saveGame();
   }
 
