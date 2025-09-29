@@ -61,8 +61,11 @@ export class PersistentHeader {
     private gameState: GameStateManager
   ) {
     this.element = this.createElement();
+    this.player = this.gameState.getPlayer(); // Initialize player immediately
     this.setupEventListeners();
     this.updateContent();
+    
+    console.log('PersistentHeader initialized with player:', this.player);
   }
 
   /**

@@ -75,6 +75,12 @@ class MeetCuteCafeGame {
       // Ensure persistent header is visible and set to cafe-hub variant
       this.eventSystem.emit('header:set_variant', { variant: 'cafe-hub' });
       
+      // Force header visibility
+      const headerElement = this.persistentHeader.getElement();
+      headerElement.style.display = 'flex';
+      headerElement.style.visibility = 'visible';
+      headerElement.style.opacity = '1';
+      
       // Start with café hub
       this.screenManager.navigateTo('cafe-hub');
 
