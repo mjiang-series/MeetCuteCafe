@@ -182,7 +182,7 @@ describe('AssetManager', () => {
 
       // Critical assets should be marked as preloaded
       expect(assetManager.isPreloaded('art/npc/aria/aria_portrait.png')).toBe(true);
-      expect(assetManager.isPreloaded('art/love_pets_logo_transparent.png')).toBe(true);
+      expect(assetManager.isPreloaded('art/game_logo.png')).toBe(true);
     });
 
     test('should handle preloading errors gracefully', async () => {

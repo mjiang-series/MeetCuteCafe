@@ -310,9 +310,9 @@ export class TileSystem {
       opacity: 1,
     });
 
-    // Add floor tiles
-    for (let x = 2; x < 18; x++) {
-      for (let y = 2; y < 13; y++) {
+    // Add floor tiles (entire area)
+    for (let x = 0; x < 20; x++) {
+      for (let y = 0; y < 15; y++) {
         tileSystem.addTile('floor', {
           position: { x, y },
           type: 'floor',
@@ -331,6 +331,30 @@ export class TileSystem {
         interactive: false,
       });
     }
+
+    // Add 2x2 tables
+    const tablePositions = [
+      { x: 3, y: 3 }, // Top-left table
+      { x: 15, y: 3 }, // Top-right table
+      { x: 3, y: 11 }, // Bottom-left table
+      { x: 15, y: 11 }, // Bottom-right table
+      { x: 9, y: 5 }, // Center table
+    ];
+
+    tablePositions.forEach(pos => {
+      // Add 2x2 table (mark all 4 tiles as non-walkable)
+      for (let dx = 0; dx < 2; dx++) {
+        for (let dy = 0; dy < 2; dy++) {
+          tileSystem.addTile('objects', {
+            position: { x: pos.x + dx, y: pos.y + dy },
+            type: 'table',
+            walkable: false,
+            interactive: false,
+            data: { tableId: `table_${pos.x}_${pos.y}`, isMainTile: dx === 0 && dy === 0 },
+          });
+        }
+      }
+    });
 
     // Add interactive hotspots
     tileSystem.addTile('hotspots', {

@@ -6,14 +6,16 @@ import { BaseScreen } from '../BaseScreen';
 import type { EventSystem } from '@/systems/EventSystem';
 import type { GameStateManager } from '@/systems/GameStateManager';
 import type { AssetManager } from '@/systems/AssetManager';
-import { SpriteAnimator, createCafeSpriteSheets } from '@/systems/SpriteAnimator';
 import { TileSystem } from '@/systems/TileSystem';
+import { MovementSystem } from '@/systems/MovementSystem';
+import { placeholderAssets } from '@/utils/PlaceholderAssets';
 import type { ScreenData } from '../ScreenManager';
 
 export class CafeHubScreen extends BaseScreen {
-  private spriteAnimator: SpriteAnimator;
   private _tileSystem: TileSystem | null = null;
+  private movementSystem: MovementSystem | null = null;
   private animationUpdateInterval: number | null = null;
+  private _generatedAssets: Record<string, string> | null = null;
 
   constructor(
     eventSystem: EventSystem,
@@ -22,10 +24,14 @@ export class CafeHubScreen extends BaseScreen {
   ) {
     super('cafe-hub', eventSystem, gameState, assetManager);
     
-    // Initialize sprite animation system
-    this.spriteAnimator = new SpriteAnimator();
-    
-    this.setupSpriteAnimations();
+    this.setupMovementSystem();
+  }
+
+  private get generatedAssets(): Record<string, string> {
+    if (!this._generatedAssets) {
+      this._generatedAssets = placeholderAssets.generateCafeAssets();
+    }
+    return this._generatedAssets;
   }
 
   private get tileSystem(): TileSystem {
@@ -36,333 +42,340 @@ export class CafeHubScreen extends BaseScreen {
   }
 
   protected createContent(): string {
-    const player = this.gameState.getPlayer();
     const { width, height, tileSize } = this.tileSystem.getDimensions();
 
     return `
-      <div class="cafe-hub-animated">
-        <!-- Animated Tile-Based Café Scene -->
+      <div class="cafe-hub-placeholder">
+        <!-- Animated Café Scene with Moving Characters -->
         <div class="cafe-scene-container">
-          <div class="cafe-grid" style="
+          <div class="cafe-grid" id="cafe-grid" style="
             width: ${width * tileSize}px;
             height: ${height * tileSize}px;
             position: relative;
             background: linear-gradient(135deg, #ffeef4 0%, #ffd6e1 50%, #ffb8c6 100%);
             border-radius: 12px;
-            overflow: hidden;
+            overflow: visible;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+            margin: 20px auto;
           ">
-            <!-- Background Pattern -->
-            <div class="cafe-background-pattern"></div>
+            <!-- Tile Grid Background -->
+            ${this.renderTileGrid()}
             
-            <!-- Tile Layers -->
-            ${this.tileSystem.generateLayersHTML()}
-            
-            <!-- Animated Sprites Layer -->
-            <div class="sprites-layer">
-              <!-- NPCs -->
-              <div class="sprite npc-aria" data-sprite-id="aria" style="
-                position: absolute;
-                left: ${8 * tileSize}px;
-                top: ${6 * tileSize}px;
-                width: ${tileSize}px;
-                height: ${tileSize + 16}px;
-                z-index: 10;
-                cursor: pointer;
-                transition: transform 0.2s ease;
-              " data-action="talk-npc" data-npc="aria">
-                <div class="npc-sprite" id="sprite-aria"></div>
-                <div class="npc-nameplate">Aria</div>
-              </div>
-
-              <div class="sprite npc-kai" data-sprite-id="kai" style="
-                position: absolute;
-                left: ${12 * tileSize}px;
-                top: ${6 * tileSize}px;
-                width: ${tileSize}px;
-                height: ${tileSize + 16}px;
-                z-index: 10;
-                cursor: pointer;
-                transition: transform 0.2s ease;
-              " data-action="talk-npc" data-npc="kai">
-                <div class="npc-sprite" id="sprite-kai"></div>
-                <div class="npc-nameplate">Kai</div>
-              </div>
-
-              <div class="sprite npc-elias" data-sprite-id="elias" style="
-                position: absolute;
-                left: ${15 * tileSize}px;
-                top: ${10 * tileSize}px;
-                width: ${tileSize}px;
-                height: ${tileSize + 16}px;
-                z-index: 10;
-                cursor: pointer;
-                transition: transform 0.2s ease;
-              " data-action="talk-npc" data-npc="elias">
-                <div class="npc-sprite" id="sprite-elias"></div>
-                <div class="npc-nameplate">Elias</div>
-              </div>
-
-              <!-- Interactive Objects -->
-              <div class="sprite order-board" style="
-                position: absolute;
-                left: ${10 * tileSize}px;
-                top: ${7 * tileSize}px;
-                width: ${tileSize}px;
-                height: ${tileSize}px;
-                z-index: 5;
-                cursor: pointer;
-                transition: transform 0.2s ease;
-              " data-navigate="orders">
-                <div class="object-sprite" id="sprite-order-board"></div>
-                <div class="hotspot-label">📋 Orders</div>
-              </div>
-
-              <div class="sprite flavor-shelf" style="
-                position: absolute;
-                left: ${4 * tileSize}px;
-                top: ${4 * tileSize}px;
-                width: ${tileSize * 2}px;
-                height: ${tileSize}px;
-                z-index: 5;
-                cursor: pointer;
-                transition: transform 0.2s ease;
-              " data-navigate="flavor-collection">
-                <div class="object-sprite" id="sprite-flavor-shelf">
-                  <div class="flavor-jars">
-                    <div class="jar" id="sprite-jar-sweet">🍯</div>
-                    <div class="jar" id="sprite-jar-salty">🧂</div>
-                    <div class="jar" id="sprite-jar-bitter">☕</div>
-                    <div class="jar" id="sprite-jar-spicy">🌶️</div>
-                    <div class="jar" id="sprite-jar-fresh">🍃</div>
-                  </div>
-                </div>
-                <div class="hotspot-label">🧪 Flavors</div>
-              </div>
-
-              <!-- Ambient Animations -->
-              <div class="sprite steam-1" style="
-                position: absolute;
-                left: ${7 * tileSize}px;
-                top: ${8 * tileSize - 10}px;
-                width: 16px;
-                height: 24px;
-                z-index: 8;
-                opacity: 0.6;
-              ">
-                <div class="steam-sprite" id="sprite-steam-1"></div>
-              </div>
-
-              <div class="sprite steam-2" style="
-                position: absolute;
-                left: ${13 * tileSize + 8}px;
-                top: ${8 * tileSize - 8}px;
-                width: 16px;
-                height: 24px;
-                z-index: 8;
-                opacity: 0.4;
-              ">
-                <div class="steam-sprite" id="sprite-steam-2"></div>
-              </div>
+            <!-- Moving Characters Layer -->
+            <div class="characters-layer" id="characters-layer" style="
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              z-index: 10;
+              pointer-events: none;
+            ">
+              <!-- Characters will be positioned here dynamically -->
             </div>
           </div>
-        </div>
-
-        <!-- Status Panel -->
-        <div class="cafe-status-panel">
-          <div class="status-grid">
-            <div class="status-card">
-              <div class="status-icon">📋</div>
-              <div class="status-info">
-                <div class="status-value">${this.getOrdersCompleted()}</div>
-                <div class="status-label">Orders Completed</div>
-              </div>
-            </div>
-            
-            <div class="status-card">
-              <div class="status-icon">💕</div>
-              <div class="status-info">
-                <div class="status-value">${player.journal.entries.length}</div>
-                <div class="status-label">Memories Created</div>
-              </div>
-            </div>
-            
-            <div class="status-card">
-              <div class="status-icon">🧪</div>
-              <div class="status-info">
-                <div class="status-value">${player.flavors.length}</div>
-                <div class="status-label">Flavors Owned</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-          <button class="quick-action-btn" data-navigate="orders">
-            <span class="btn-icon">📋</span>
-            <span class="btn-label">Orders</span>
-          </button>
-          <button class="quick-action-btn" data-navigate="flavor-collection">
-            <span class="btn-icon">🧪</span>
-            <span class="btn-label">Flavors</span>
-          </button>
         </div>
       </div>
 
       <style>
-        ${this.generateAnimatedCafeCSS()}
+        ${this.generatePlaceholderCSS()}
+        ${placeholderAssets.generateAssetCSS(this.generatedAssets)}
       </style>
     `;
   }
 
   /**
-   * Generate CSS for animated cafe
+   * Render the tile grid background
    */
-  private generateAnimatedCafeCSS(): string {
+  private renderTileGrid(): string {
+    const { width, height, tileSize } = this.tileSystem.getDimensions();
+    let html = '';
+
+    // Render floor tiles
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        const tile = this.tileSystem.getTileAt('floor', { x, y });
+        if (tile) {
+          html += `
+            <div class="tile floor-tile asset-floor" style="
+              position: absolute;
+              left: ${x * tileSize}px;
+              top: ${y * tileSize}px;
+              width: ${tileSize}px;
+              height: ${tileSize}px;
+              z-index: 1;
+            "></div>
+          `;
+        }
+      }
+    }
+
+    // Render object tiles (counter, tables)
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        const tile = this.tileSystem.getTileAt('objects', { x, y });
+        if (tile) {
+          if (tile.type === 'counter') {
+            html += `
+              <div class="tile counter-tile asset-counter" style="
+                position: absolute;
+                left: ${x * tileSize}px;
+                top: ${y * tileSize}px;
+                width: ${tileSize}px;
+                height: ${tileSize}px;
+                z-index: 2;
+              "></div>
+            `;
+          } else if (tile.type === 'table' && tile.data?.isMainTile) {
+            // Only render the main tile for 2x2 tables
+            html += `
+              <div class="tile table-tile asset-table" style="
+                position: absolute;
+                left: ${x * tileSize}px;
+                top: ${y * tileSize}px;
+                width: ${tileSize * 2}px;
+                height: ${tileSize * 2}px;
+                z-index: 2;
+              "></div>
+            `;
+          }
+        }
+      }
+    }
+
+    return html;
+  }
+
+  /**
+   * Setup movement system for characters
+   */
+  private setupMovementSystem(): void {
+    // Will be initialized when tileSystem is ready
+  }
+
+  /**
+   * Initialize movement system with characters
+   */
+  private initializeMovementSystem(): void {
+    if (!this.movementSystem) {
+      // Ensure tileSystem is initialized
+      const tileSystem = this.tileSystem; // This will initialize it via the getter
+      
+      this.movementSystem = new MovementSystem(tileSystem, this.eventSystem);
+      
+      // Add default characters
+      const characters = MovementSystem.createDefaultCharacters();
+      characters.forEach(char => {
+        this.movementSystem!.addCharacter(char);
+      });
+
+      // Listen for character movement events
+      this.eventSystem.on('character:moved', (data) => {
+        this.updateCharacterPosition(data.characterId, data.position as any);
+      });
+
+      // Start movement
+      this.movementSystem.start();
+      
+      console.log(`Movement system initialized with ${characters.length} characters`);
+    }
+  }
+
+  /**
+   * Update character position in the DOM
+   */
+  private updateCharacterPosition(characterId: string, position: { x: number; y: number }): void {
+    const characterElement = document.getElementById(`character-${characterId}`);
+    if (characterElement) {
+      const { tileSize } = this.tileSystem.getDimensions();
+      characterElement.style.left = `${position.x * tileSize + 4}px`; // Center in tile
+      characterElement.style.top = `${position.y * tileSize - 8}px`; // Slightly above tile
+    }
+  }
+
+  /**
+   * Render moving characters
+   */
+  private renderCharacters(): void {
+    if (!this.movementSystem) {
+      console.log('No movement system available');
+      return;
+    }
+
+    const charactersLayer = document.getElementById('characters-layer');
+    if (!charactersLayer) {
+      console.log('Characters layer not found');
+      return;
+    }
+
+    const { tileSize } = this.tileSystem.getDimensions();
+    const characters = this.movementSystem.getCharacters();
+    
+    console.log(`Rendering ${characters.length} characters`);
+
+    // Clear existing characters
+    charactersLayer.innerHTML = '';
+
+      // Render each character
+      characters.forEach(character => {
+        const characterElement = document.createElement('div');
+        characterElement.id = `character-${character.id}`;
+        characterElement.className = `character ${character.type}`;
+        characterElement.style.cssText = `
+          position: absolute;
+          left: ${character.currentPos.x * tileSize + 4}px;
+          top: ${character.currentPos.y * tileSize - 8}px;
+          width: 24px;
+          height: 32px;
+          z-index: 15;
+          transition: left 0.3s ease, top 0.3s ease;
+          cursor: ${character.type === 'npc' ? 'pointer' : 'default'};
+          pointer-events: auto;
+        `;
+
+        // Add character sprite
+        const spriteElement = document.createElement('div');
+        spriteElement.className = `asset-${character.type === 'npc' ? character.id : 'customer'}`;
+        spriteElement.style.cssText = `
+          width: 100%; 
+          height: 100%;
+          border: 2px solid ${character.color};
+          border-radius: 4px;
+          background-color: ${character.color};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 12px;
+        `;
+        
+        // Add character letter
+        spriteElement.textContent = character.type === 'npc' 
+          ? character.id.charAt(0).toUpperCase() 
+          : 'C';
+        
+        characterElement.appendChild(spriteElement);
+
+        // Add nameplate for NPCs
+        if (character.type === 'npc') {
+          const nameplate = document.createElement('div');
+          nameplate.className = 'character-nameplate';
+          nameplate.textContent = character.id.charAt(0).toUpperCase() + character.id.slice(1);
+          nameplate.style.cssText = `
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e17497;
+            border-radius: 8px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #e17497;
+            white-space: nowrap;
+            pointer-events: none;
+          `;
+          characterElement.appendChild(nameplate);
+
+          // Add click handler for NPCs
+          characterElement.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log(`Clicked on ${character.id}`);
+            this.eventSystem.emit('ui:show_screen', { screenId: 'orders' });
+          });
+        }
+
+        charactersLayer.appendChild(characterElement);
+      });
+  }
+
+  /**
+   * Generate CSS for placeholder cafe
+   */
+  private generatePlaceholderCSS(): string {
     return `
-      .cafe-hub-animated {
+      .cafe-hub-placeholder {
         display: flex;
         flex-direction: column;
         gap: 20px;
         padding: 20px;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #ffeef4 0%, #ffd6e1 50%, #ffb8c6 100%);
+        padding-top: 80px; /* Leave space for persistent header */
+        min-height: calc(100vh - 80px);
+        background: linear-gradient(135deg, #ffeef4 0%, #ffd6e1 100%);
       }
 
       .cafe-scene-container {
-        flex: 1;
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 20px;
       }
 
-      .cafe-background-pattern {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: 
-          radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 1px, transparent 1px),
-          radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 1px, transparent 1px);
-        background-size: 40px 40px, 60px 60px;
-        z-index: 0;
+      .tile {
+        border: 1px solid rgba(0,0,0,0.1);
       }
 
-      .sprites-layer {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-      }
-
-      .sprite {
-        pointer-events: auto;
-        user-select: none;
-      }
-
-      .sprite:hover {
+      .interactive-object:hover {
         transform: scale(1.05);
       }
 
-      .sprite:active {
-        transform: scale(0.98);
-      }
-
-      /* NPC Sprites */
-      .npc-sprite {
-        width: 100%;
-        height: 48px;
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-        animation: npcIdle 3s ease-in-out infinite;
-      }
-
-      .npc-nameplate {
+      .hotspot-label {
         position: absolute;
         bottom: -20px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(255,255,255,0.9);
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #e17497;
+        border-radius: 8px;
         padding: 4px 8px;
-        border-radius: 12px;
         font-size: 12px;
-        font-weight: 600;
-        color: #2d3436;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        border: 2px solid #e17497;
-      }
-
-      /* Object Sprites */
-      .object-sprite {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        animation: objectPulse 2s ease-in-out infinite;
-      }
-
-      .flavor-jars {
-        display: flex;
-        gap: 4px;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-
-      .jar {
-        font-size: 16px;
-        animation: jarBounce 3s ease-in-out infinite;
-        animation-delay: calc(var(--jar-index, 0) * 0.2s);
-      }
-
-      /* Steam Animation */
-      .steam-sprite {
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(to top, 
-          rgba(255,255,255,0.8) 0%,
-          rgba(255,255,255,0.4) 50%,
-          rgba(255,255,255,0.1) 100%);
-        border-radius: 50%;
-        animation: steamRise 2s ease-in-out infinite;
-      }
-
-      /* Hotspot Labels */
-      .hotspot-label {
-        position: absolute;
-        bottom: -25px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(225, 116, 151, 0.9);
-        color: white;
-        padding: 6px 12px;
-        border-radius: 16px;
-        font-size: 12px;
-        font-weight: 600;
+        font-weight: bold;
+        color: #e17497;
         white-space: nowrap;
-        box-shadow: 0 3px 10px rgba(225, 116, 151, 0.3);
         opacity: 0;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.2s ease;
       }
 
-      .sprite:hover .hotspot-label {
+      .interactive-object:hover .hotspot-label {
         opacity: 1;
       }
 
-      /* Status Panel */
+      .character {
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      }
+
+      .character.npc:hover {
+        transform: scale(1.1);
+      }
+
+      .character.npc:hover .character-nameplate {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-2px);
+      }
+
+      .character-nameplate {
+        opacity: 0.8;
+        animation: float 2s ease-in-out infinite;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateX(-50%) translateY(0px); }
+        50% { transform: translateX(-50%) translateY(-2px); }
+      }
+
+      /* Character visibility improvements */
+      .characters-layer .character {
+        position: absolute !important;
+        z-index: 20 !important;
+      }
+
       .cafe-status-panel {
-        background: rgba(255,255,255,0.95);
-        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
         padding: 20px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       }
 
       .status-grid {
@@ -376,275 +389,115 @@ export class CafeHubScreen extends BaseScreen {
         align-items: center;
         gap: 12px;
         padding: 16px;
-        background: linear-gradient(135deg, #ffeef4, #ffd6e1);
-        border-radius: 12px;
-        border: 2px solid rgba(225, 116, 151, 0.2);
+        background: linear-gradient(135deg, #e17497 0%, #d1477a 100%);
+        border-radius: 8px;
+        color: white;
       }
 
       .status-icon {
         font-size: 24px;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(225, 116, 151, 0.1);
-        border-radius: 50%;
       }
 
       .status-value {
-        font-size: 24px;
-        font-weight: 700;
-        color: #e17497;
+        font-size: 20px;
+        font-weight: bold;
       }
 
       .status-label {
         font-size: 12px;
-        color: #636e72;
-        font-weight: 500;
+        opacity: 0.9;
       }
 
-      /* Quick Actions */
       .quick-actions {
         display: flex;
+        gap: 12px;
         justify-content: center;
-        gap: 16px;
       }
 
       .quick-action-btn {
         display: flex;
+        flex-direction: column;
         align-items: center;
         gap: 8px;
-        padding: 12px 24px;
-        background: linear-gradient(135deg, #e17497, #f2a5b8);
-        color: white;
+        padding: 16px 24px;
+        background: linear-gradient(135deg, #e17497 0%, #d1477a 100%);
         border: none;
-        border-radius: 25px;
-        font-weight: 600;
+        border-radius: 12px;
+        color: white;
+        font-weight: bold;
         cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(225, 116, 151, 0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 12px rgba(225, 116, 151, 0.3);
       }
 
       .quick-action-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(225, 116, 151, 0.4);
+        box-shadow: 0 6px 16px rgba(225, 116, 151, 0.4);
       }
 
       .btn-icon {
-        font-size: 18px;
+        font-size: 24px;
       }
 
-      /* Animations */
-      @keyframes npcIdle {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-2px); }
+      .btn-label {
+        font-size: 14px;
       }
 
-      @keyframes objectPulse {
-        0%, 100% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.05); opacity: 0.9; }
-      }
-
-      @keyframes jarBounce {
-        0%, 100% { transform: translateY(0px) rotate(0deg); }
-        25% { transform: translateY(-3px) rotate(2deg); }
-        75% { transform: translateY(-1px) rotate(-1deg); }
-      }
-
-      @keyframes steamRise {
-        0% { 
-          transform: translateY(0px) scale(0.8);
-          opacity: 0.8;
-        }
-        50% {
-          transform: translateY(-8px) scale(1);
-          opacity: 0.4;
-        }
-        100% { 
-          transform: translateY(-16px) scale(1.2);
-          opacity: 0;
-        }
-      }
-
-      /* Mobile Responsive */
       @media (max-width: 768px) {
-        .cafe-hub-animated {
+        .cafe-hub-placeholder {
           padding: 10px;
         }
-
-        .cafe-scene-container {
-          padding: 10px;
+        
+        .cafe-grid {
+          transform: scale(0.8);
+          transform-origin: center;
         }
-
+        
         .status-grid {
           grid-template-columns: 1fr;
         }
-
+        
         .quick-actions {
           flex-direction: column;
-          align-items: center;
         }
-
-        .quick-action-btn {
-          width: 200px;
-          justify-content: center;
-        }
-      }
-    `;
+      }`;
   }
 
-  /**
-   * Setup sprite animations
-   */
-  private setupSpriteAnimations(): void {
-    const spriteSheets = createCafeSpriteSheets();
-
-    // Create NPC sprites
-    if (spriteSheets.aria) {
-      this.spriteAnimator.createSprite('aria', spriteSheets.aria, 'idle');
-    }
-    if (spriteSheets.kai) {
-      this.spriteAnimator.createSprite('kai', spriteSheets.kai, 'idle');
-    }
-    if (spriteSheets.elias) {
-      this.spriteAnimator.createSprite('elias', spriteSheets.elias, 'idle');
-    }
-
-    // Create ambient sprites
-    if (spriteSheets.steam) {
-      this.spriteAnimator.createSprite('steam-1', spriteSheets.steam, 'rise');
-      this.spriteAnimator.createSprite('steam-2', spriteSheets.steam, 'rise');
-    }
-
-    // Create object sprites
-    if (spriteSheets.objects) {
-      this.spriteAnimator.createSprite('order-board', spriteSheets.objects, 'orderBook');
-      this.spriteAnimator.createSprite('flavor-jars', spriteSheets.objects, 'flavorJar');
-    }
-  }
-
-  /**
-   * Update sprite visuals
-   */
-  private updateSpriteVisuals(): void {
-    // Update NPC sprites
-    this.updateSpriteElement('aria');
-    this.updateSpriteElement('kai'); 
-    this.updateSpriteElement('elias');
-
-    // Update steam sprites
-    this.updateSteamSprite('steam-1');
-    this.updateSteamSprite('steam-2');
-  }
-
-  /**
-   * Update individual sprite element
-   */
-  private updateSpriteElement(spriteId: string): void {
-    const element = this.querySelector(`#sprite-${spriteId}`);
-    if (element) {
-      const css = this.spriteAnimator.getSpriteCSS(spriteId);
-      Object.assign(element.style, css);
-    }
-  }
-
-  /**
-   * Update steam sprite with special handling
-   */
-  private updateSteamSprite(spriteId: string): void {
-    const element = this.querySelector(`#sprite-${spriteId}`);
-    if (element) {
-      // Steam uses CSS animation instead of sprite sheets for now
-      element.style.animation = 'steamRise 2s ease-in-out infinite';
-    }
-  }
-
-  /**
-   * Get orders completed count
-   */
-  private getOrdersCompleted(): number {
-    // TODO: Implement actual order tracking
-    return Math.floor(Math.random() * 25) + 5;
-  }
-
-  /**
-   * Handle screen show
-   */
-  protected override onScreenShow(_data?: ScreenData): void {
+  override onShow(data?: ScreenData): void {
+    super.onShow(data);
+    
+    // Set the correct header variant for cafe hub
     this.eventSystem.emit('header:set_variant', { variant: 'cafe-hub' });
     
-    // Start animation updates
-    this.startAnimationUpdates();
-  }
-
-  /**
-   * Handle screen hide  
-   */
-  protected override onScreenHide(): void {
-    this.stopAnimationUpdates();
-  }
-
-  /**
-   * Start animation update loop
-   */
-  private startAnimationUpdates(): void {
-    if (this.animationUpdateInterval) return;
-
-    this.animationUpdateInterval = window.setInterval(() => {
-      this.updateSpriteVisuals();
-    }, 100); // Update at 10 FPS
-  }
-
-  /**
-   * Stop animation updates
-   */
-  private stopAnimationUpdates(): void {
-    if (this.animationUpdateInterval) {
-      window.clearInterval(this.animationUpdateInterval);
-      this.animationUpdateInterval = null;
-    }
-  }
-
-  /**
-   * Handle actions
-   */
-  protected override handleAction(action: string, element: HTMLElement): void {
-    switch (action) {
-      case 'talk-npc': {
-        const npcId = element.getAttribute('data-npc');
-        if (npcId) {
-          this.talkToNPC(npcId);
-        }
-        break;
-      }
-      
-      default:
-        super.handleAction(action, element);
-    }
-  }
-
-  /**
-   * Handle NPC interaction
-   */
-  private talkToNPC(npcId: string): void {
-    // Play wave animation
-    this.spriteAnimator.playAnimation(npcId, 'wave', () => {
-      this.spriteAnimator.playAnimation(npcId, 'idle');
-    });
-
-    // Show interaction message
-    this.showSuccess(`You chatted with ${npcId.charAt(0).toUpperCase() + npcId.slice(1)}! 💕`);
+    // Initialize movement system when screen is shown
+    this.initializeMovementSystem();
     
-    // TODO: Implement proper NPC dialogue system
+    // Render characters after a short delay to ensure DOM is ready
+    setTimeout(() => {
+      this.renderCharacters();
+      
+      // Start a periodic re-render to keep characters visible
+      if (!this.animationUpdateInterval) {
+        this.animationUpdateInterval = window.setInterval(() => {
+          this.renderCharacters();
+        }, 1000); // Re-render every second
+      }
+    }, 100);
   }
+
 
   /**
    * Cleanup
    */
   override onDestroy(): void {
-    this.stopAnimationUpdates();
-    this.spriteAnimator.destroy();
+    if (this.movementSystem) {
+      this.movementSystem.destroy();
+      this.movementSystem = null;
+    }
+    if (this.animationUpdateInterval) {
+      window.clearInterval(this.animationUpdateInterval);
+      this.animationUpdateInterval = null;
+    }
     super.onDestroy?.();
   }
 }

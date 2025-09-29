@@ -43,7 +43,7 @@ describe('AssetPaths', () => {
     });
 
     test('should get logo path', () => {
-      expect(getLogoPath()).toBe('/art/love_pets_logo_transparent.png');
+      expect(getLogoPath()).toBe('/art/game_logo.png');
     });
   });
 
@@ -162,7 +162,7 @@ describe('AssetPaths', () => {
       expect(ASSET_PATHS.npcCinematics.kai).toBe('art/npc/kai/kai_gacha_cinematic.mp4');
       expect(ASSET_PATHS.memoryPlaceholder).toBe('art/memories_image_placeholder.png');
       expect(ASSET_PATHS.playerPortrait).toBe('art/player_portrait.png');
-      expect(ASSET_PATHS.logo).toBe('art/love_pets_logo_transparent.png');
+      expect(ASSET_PATHS.logo).toBe('art/game_logo.png');
       expect(ASSET_PATHS.ui.gachaBanner).toBe('art/ui/gacha_banner.svg');
     });
   });

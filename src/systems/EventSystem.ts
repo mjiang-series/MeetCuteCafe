@@ -15,6 +15,9 @@ export type EventMap = {
   'order:completed': { order: unknown };
   'order:expired': { order: unknown };
 
+  // Character movement events
+  'character:moved': { characterId: string; position: unknown };
+
   // Memory events
   'memory:created': { memory: unknown };
   'memory:viewed': { memoryId: string };
