@@ -60,39 +60,39 @@ export class PlaceholderAssets {
   generateCafeAssets(): Record<string, string> {
     const assets: Record<string, string> = {};
 
-    // Environment tiles
+    // Environment tiles - matching coral/pink logo color scheme
     assets['floor'] = this.generateAsset({
       id: 'floor',
       width: 32,
       height: 32,
-      color: '#deb887', // Burlywood
-      borderColor: '#cdaa7d',
+      color: '#ffeef4', // Light pink/cream (matches logo background)
+      borderColor: '#ffd6e1', // Slightly darker pink border
     });
 
     assets['counter'] = this.generateAsset({
       id: 'counter',
       width: 32,
       height: 32,
-      color: '#8b4513', // Brown
-      borderColor: '#654321',
+      color: '#e17497', // Main coral/pink (matches logo primary color)
+      borderColor: '#d1477a', // Darker coral for definition
     });
 
     assets['table'] = this.generateAsset({
       id: 'table',
       width: 64, // 2x2 tiles
       height: 64,
-      color: '#d2691e', // Chocolate
-      borderColor: '#a0522d',
+      color: '#f2a5b8', // Lighter coral/pink (complementary to main color)
+      borderColor: '#e17497', // Main coral border for consistency
       text: 'TABLE',
     });
 
-    // Interactive objects
+    // Interactive objects - coordinated with coral/pink theme
     assets['order_board'] = this.generateAsset({
       id: 'order_board',
       width: 32,
       height: 32,
-      color: '#2f4f4f', // Dark slate gray
-      borderColor: '#1c3030',
+      color: '#8e44ad', // Purple (matches UI buttons)
+      borderColor: '#7d3c98',
       text: '📋',
     });
 
@@ -100,8 +100,8 @@ export class PlaceholderAssets {
       id: 'flavor_shelf',
       width: 64, // 2 tiles wide
       height: 32,
-      color: '#8b4513', // Brown
-      borderColor: '#654321',
+      color: '#d1477a', // Darker coral (complements main theme)
+      borderColor: '#b8396a',
       text: '🧪',
     });
 
@@ -109,8 +109,8 @@ export class PlaceholderAssets {
       id: 'coffee_machine',
       width: 32,
       height: 48,
-      color: '#2c3e50', // Dark blue gray
-      borderColor: '#1a252f',
+      color: '#c0392b', // Warm red (complements coral/pink)
+      borderColor: '#a93226',
       text: '☕',
     });
 

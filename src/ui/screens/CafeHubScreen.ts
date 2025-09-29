@@ -42,43 +42,39 @@ export class CafeHubScreen extends BaseScreen {
   }
 
   protected createContent(): string {
-    const { width, height, tileSize } = this.tileSystem.getDimensions();
+    // Trigger tile system initialization
+    this.tileSystem.getDimensions();
 
     return `
-      <div class="cafe-hub-placeholder">
-        <!-- Animated Café Scene with Moving Characters -->
-        <div class="cafe-scene-container">
-          <div class="cafe-grid" id="cafe-grid" style="
-            width: ${width * tileSize}px;
-            height: ${height * tileSize}px;
-            position: relative;
-            background: linear-gradient(135deg, #ffeef4 0%, #ffd6e1 50%, #ffb8c6 100%);
-            border-radius: 12px;
-            overflow: visible;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
-            margin: 20px auto;
-          ">
-            <!-- Tile Grid Background -->
-            ${this.renderTileGrid()}
-            
-            <!-- Moving Characters Layer -->
-            <div class="characters-layer" id="characters-layer" style="
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              z-index: 10;
-              pointer-events: none;
-            ">
-              <!-- Characters will be positioned here dynamically -->
-            </div>
-            
-            <!-- UI Elements docked to counter -->
-            <div class="counter-ui-elements">
-              ${this.renderCounterUIElements()}
-            </div>
-          </div>
+      <!-- Full-Screen Animated Café -->
+      <div class="cafe-grid" id="cafe-grid" style="
+        width: 100vw;
+        height: calc(100vh - 80px);
+        position: fixed;
+        top: 80px;
+        left: 0;
+        background: linear-gradient(135deg, #ffeef4 0%, #ffd6e1 50%, #ffb8c6 100%);
+        overflow: hidden;
+      ">
+        <!-- Tile Grid Background -->
+        ${this.renderTileGrid()}
+        
+        <!-- Moving Characters Layer -->
+        <div class="characters-layer" id="characters-layer" style="
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 10;
+          pointer-events: none;
+        ">
+          <!-- Characters will be positioned here dynamically -->
+        </div>
+        
+        <!-- UI Elements docked to counter -->
+        <div class="counter-ui-elements">
+          ${this.renderCounterUIElements()}
         </div>
       </div>
 
@@ -329,33 +325,18 @@ export class CafeHubScreen extends BaseScreen {
   }
 
   /**
-   * Generate CSS for placeholder cafe
+   * Generate CSS for full-screen cafe
    */
   private generatePlaceholderCSS(): string {
     return `
-      .cafe-hub-placeholder {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 10px;
-        padding-top: 80px; /* Leave space for persistent header */
-        min-height: calc(100vh - 80px);
-        background: linear-gradient(135deg, #ffeef4 0%, #ffd6e1 100%);
-        overflow: hidden; /* No scrolling needed */
-      }
-
-      .cafe-scene-container {
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        width: 100%;
-        height: 100%;
-        overflow: hidden; /* No scrolling */
-      }
-
       .cafe-grid {
-        /* Grid size is now calculated dynamically */
-        position: relative;
+        /* Full-screen cafe grid */
+        position: fixed !important;
+        top: 80px !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: calc(100vh - 80px) !important;
+        overflow: hidden !important;
       }
 
       .tile {
@@ -543,48 +524,7 @@ export class CafeHubScreen extends BaseScreen {
         font-size: 14px;
       }
 
-      /* Responsive adjustments without scaling */
-      @media (max-width: 480px) {
-        .cafe-hub-placeholder {
-          padding: 5px;
-          padding-top: 70px;
-        }
-        
-        .ui-icon-container {
-          width: 40px;
-          height: 40px;
-        }
-        
-        .ui-icon {
-          font-size: 18px;
-        }
-        
-        .ui-label {
-          font-size: 9px;
-        }
-      }
-
-      @media (min-width: 481px) and (max-width: 768px) {
-        .cafe-hub-placeholder {
-          padding: 8px;
-          padding-top: 75px;
-        }
-        
-        .ui-icon-container {
-          width: 44px;
-          height: 44px;
-        }
-        
-        .ui-icon {
-          font-size: 20px;
-        }
-        
-        .ui-label {
-          font-size: 10px;
-        }
-      }
-
-      /* Ensure touch targets are accessible on mobile */
+      /* Mobile touch targets */
       @media (hover: none) and (pointer: coarse) {
         .counter-ui-item {
           min-width: 44px;
@@ -628,16 +568,30 @@ export class CafeHubScreen extends BaseScreen {
    */
   private setupResizeListener(): void {
     const handleResize = () => {
+      const oldDimensions = this._tileSystem ? this.tileSystem.getDimensions() : null;
+      
+      // Store current character positions before recreating tile system
+      const currentCharacters = this.movementSystem ? this.movementSystem.getCharacters() : [];
+      
       // Recreate tile system with new dimensions
       this._tileSystem = null; // Reset to trigger recreation
+      const newDimensions = this.tileSystem.getDimensions();
       
       // Re-render the entire screen content
       const element = this.element;
       if (element) {
         element.innerHTML = this.createContent();
         
-        // Re-initialize movement system and characters
+        // Re-initialize movement system
+        this.movementSystem?.destroy();
+        this.movementSystem = null;
         this.initializeMovementSystem();
+        
+        // Reposition characters to stay visible
+        if (oldDimensions && this.movementSystem) {
+          this.repositionCharacters(currentCharacters, oldDimensions, newDimensions);
+        }
+        
         setTimeout(() => {
           this.renderCharacters();
         }, 100);
@@ -650,6 +604,74 @@ export class CafeHubScreen extends BaseScreen {
       clearTimeout(resizeTimeout);
       resizeTimeout = window.setTimeout(handleResize, 250);
     });
+  }
+
+  /**
+   * Reposition characters to stay visible after screen resize
+   */
+  private repositionCharacters(
+    oldCharacters: any[], 
+    oldDimensions: { width: number; height: number; tileSize: number },
+    newDimensions: { width: number; height: number; tileSize: number }
+  ): void {
+    if (!this.movementSystem) return;
+
+    oldCharacters.forEach(oldChar => {
+      const character = this.movementSystem!.getCharacter(oldChar.id);
+      if (character) {
+        // Calculate relative position (0-1 range)
+        const relativeX = oldChar.currentPos.x / oldDimensions.width;
+        const relativeY = oldChar.currentPos.y / oldDimensions.height;
+        
+        // Calculate new position based on new dimensions
+        let newX = Math.floor(relativeX * newDimensions.width);
+        let newY = Math.floor(relativeY * newDimensions.height);
+        
+        // Ensure character stays within bounds
+        newX = Math.max(1, Math.min(newX, newDimensions.width - 2));
+        newY = Math.max(1, Math.min(newY, newDimensions.height - 2));
+        
+        // Check if position is walkable, if not find nearby walkable position
+        const newPos = this.findNearestWalkablePosition(newX, newY, newDimensions);
+        
+        // Update character position
+        character.currentPos = newPos;
+        character.targetPos = newPos;
+        
+        console.log(`Repositioned ${oldChar.id} from (${oldChar.currentPos.x},${oldChar.currentPos.y}) to (${newPos.x},${newPos.y})`);
+      }
+    });
+  }
+
+  /**
+   * Find nearest walkable position
+   */
+  private findNearestWalkablePosition(x: number, y: number, dimensions: { width: number; height: number }): { x: number; y: number } {
+    // Try the original position first
+    if (this.tileSystem.isWalkable({ x, y })) {
+      return { x, y };
+    }
+    
+    // Search in expanding circles
+    for (let radius = 1; radius <= 5; radius++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        for (let dy = -radius; dy <= radius; dy++) {
+          if (Math.abs(dx) === radius || Math.abs(dy) === radius) {
+            const testX = x + dx;
+            const testY = y + dy;
+            
+            if (testX >= 1 && testX < dimensions.width - 1 && 
+                testY >= 1 && testY < dimensions.height - 1 &&
+                this.tileSystem.isWalkable({ x: testX, y: testY })) {
+              return { x: testX, y: testY };
+            }
+          }
+        }
+      }
+    }
+    
+    // Fallback to safe position
+    return { x: 2, y: 2 };
   }
 
 

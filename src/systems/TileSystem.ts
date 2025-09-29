@@ -266,33 +266,25 @@ export class TileSystem {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
-    // Reserve space for header (80px) and padding (40px)
-    const availableHeight = viewportHeight - 120;
-    const availableWidth = viewportWidth - 40;
+    // Reserve space only for header (80px) - use full screen otherwise
+    const availableHeight = viewportHeight - 80;
+    const availableWidth = viewportWidth;
     
-    let gridWidth: number;
-    let gridHeight: number;
-    let tileSize: number;
+    // Calculate optimal tile size for full screen usage
+    const minTileSize = 20; // Minimum for usability
+    const maxTileSize = 40; // Maximum for good visual balance
     
-    if (viewportWidth <= 480) {
-      // Mobile: Smaller grid, larger tiles for touch
-      gridWidth = 12;
-      gridHeight = 8;
-      tileSize = Math.min(availableWidth / gridWidth, availableHeight / gridHeight);
-    } else if (viewportWidth <= 768) {
-      // Tablet: Medium grid
-      gridWidth = 16;
-      gridHeight = 10;
-      tileSize = Math.min(availableWidth / gridWidth, availableHeight / gridHeight);
-    } else {
-      // Desktop: Full grid
-      gridWidth = 20;
-      gridHeight = 15;
-      tileSize = Math.min(availableWidth / gridWidth, availableHeight / gridHeight, 32);
-    }
+    // Calculate grid dimensions based on optimal tile size range
+    let tileSize = Math.min(maxTileSize, Math.max(minTileSize, Math.min(availableWidth / 15, availableHeight / 10)));
     
-    // Ensure minimum tile size for usability
-    tileSize = Math.max(tileSize, 20);
+    // Calculate grid dimensions to fill the screen
+    const gridWidth = Math.floor(availableWidth / tileSize);
+    const gridHeight = Math.floor(availableHeight / tileSize);
+    
+    // Recalculate tile size to perfectly fill the screen
+    const finalTileWidth = availableWidth / gridWidth;
+    const finalTileHeight = availableHeight / gridHeight;
+    tileSize = Math.min(finalTileWidth, finalTileHeight);
     
     return { gridWidth, gridHeight, tileSize };
   }
