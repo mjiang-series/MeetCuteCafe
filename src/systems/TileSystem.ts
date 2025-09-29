@@ -260,10 +260,88 @@ export class TileSystem {
   }
 
   /**
-   * Create default cafe layout
+   * Calculate responsive dimensions based on viewport
+   */
+  static calculateResponsiveDimensions(): { gridWidth: number; gridHeight: number; tileSize: number } {
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    // Reserve space for header (80px) and padding (40px)
+    const availableHeight = viewportHeight - 120;
+    const availableWidth = viewportWidth - 40;
+    
+    let gridWidth: number;
+    let gridHeight: number;
+    let tileSize: number;
+    
+    if (viewportWidth <= 480) {
+      // Mobile: Smaller grid, larger tiles for touch
+      gridWidth = 12;
+      gridHeight = 8;
+      tileSize = Math.min(availableWidth / gridWidth, availableHeight / gridHeight);
+    } else if (viewportWidth <= 768) {
+      // Tablet: Medium grid
+      gridWidth = 16;
+      gridHeight = 10;
+      tileSize = Math.min(availableWidth / gridWidth, availableHeight / gridHeight);
+    } else {
+      // Desktop: Full grid
+      gridWidth = 20;
+      gridHeight = 15;
+      tileSize = Math.min(availableWidth / gridWidth, availableHeight / gridHeight, 32);
+    }
+    
+    // Ensure minimum tile size for usability
+    tileSize = Math.max(tileSize, 20);
+    
+    return { gridWidth, gridHeight, tileSize };
+  }
+
+  /**
+   * Calculate responsive table positions
+   */
+  static calculateTablePositions(gridWidth: number, gridHeight: number): { x: number; y: number }[] {
+    const positions: { x: number; y: number }[] = [];
+    
+    if (gridWidth >= 12 && gridHeight >= 8) {
+      // Always place tables avoiding the counter area (right side)
+      const safeWidth = gridWidth - 4; // Leave space for counter
+      const safeHeight = gridHeight - 2; // Leave space for edges
+      
+      if (gridWidth <= 12) {
+        // Mobile: 2 tables
+        positions.push(
+          { x: 2, y: 2 }, // Top-left
+          { x: 2, y: safeHeight - 2 } // Bottom-left
+        );
+      } else if (gridWidth <= 16) {
+        // Tablet: 3 tables
+        positions.push(
+          { x: 2, y: 2 }, // Top-left
+          { x: safeWidth - 4, y: 2 }, // Top-right (away from counter)
+          { x: Math.floor(safeWidth / 2) - 1, y: Math.floor(safeHeight / 2) } // Center
+        );
+      } else {
+        // Desktop: 5 tables
+        positions.push(
+          { x: 3, y: 3 }, // Top-left
+          { x: safeWidth - 2, y: 3 }, // Top-right
+          { x: 3, y: safeHeight - 2 }, // Bottom-left
+          { x: safeWidth - 2, y: safeHeight - 2 }, // Bottom-right
+          { x: Math.floor(safeWidth / 2), y: Math.floor(safeHeight / 2) } // Center
+        );
+      }
+    }
+    
+    return positions;
+  }
+
+  /**
+   * Create responsive cafe layout
    */
   static createCafeLayout(): TileSystem {
-    const tileSystem = new TileSystem(32, 20, 15);
+    const { gridWidth, gridHeight, tileSize } = TileSystem.calculateResponsiveDimensions();
+    const tileSystem = new TileSystem(tileSize, gridWidth, gridHeight);
 
     // Background layer
     tileSystem.addLayer({
@@ -311,8 +389,8 @@ export class TileSystem {
     });
 
     // Add floor tiles (entire area)
-    for (let x = 0; x < 20; x++) {
-      for (let y = 0; y < 15; y++) {
+    for (let x = 0; x < gridWidth; x++) {
+      for (let y = 0; y < gridHeight; y++) {
         tileSystem.addTile('floor', {
           position: { x, y },
           type: 'floor',
@@ -322,24 +400,22 @@ export class TileSystem {
       }
     }
 
-    // Add vertical counter at top-right (x=18, y=2-7)
-    for (let y = 2; y < 8; y++) {
+    // Add vertical counter at top-right (always rightmost column)
+    const counterX = gridWidth - 2; // One tile from the right edge
+    const counterStartY = 1;
+    const counterEndY = Math.min(7, gridHeight - 1);
+    
+    for (let y = counterStartY; y < counterEndY; y++) {
       tileSystem.addTile('objects', {
-        position: { x: 18, y },
+        position: { x: counterX, y },
         type: 'counter',
         walkable: false,
         interactive: false,
       });
     }
 
-    // Add 2x2 tables
-    const tablePositions = [
-      { x: 3, y: 3 }, // Top-left table
-      { x: 15, y: 3 }, // Top-right table
-      { x: 3, y: 11 }, // Bottom-left table
-      { x: 15, y: 11 }, // Bottom-right table
-      { x: 9, y: 5 }, // Center table
-    ];
+    // Add 2x2 tables (responsive positioning)
+    const tablePositions = TileSystem.calculateTablePositions(gridWidth, gridHeight);
 
     tablePositions.forEach(pos => {
       // Add 2x2 table (mark all 4 tiles as non-walkable)

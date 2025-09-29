@@ -76,56 +76,7 @@ export class CafeHubScreen extends BaseScreen {
             
             <!-- UI Elements docked to counter -->
             <div class="counter-ui-elements">
-              <!-- Orders UI -->
-              <div class="counter-ui-item" style="
-                position: absolute;
-                left: ${18 * tileSize - 8}px;
-                top: ${2 * tileSize}px;
-                width: 48px;
-                height: 48px;
-                z-index: 15;
-                cursor: pointer;
-                transition: transform 0.2s ease;
-              " data-navigate="orders">
-                <div class="ui-icon-container">
-                  <span class="material-icons ui-icon">assignment</span>
-                </div>
-                <div class="ui-label">Orders</div>
-              </div>
-
-              <!-- Flavors UI -->
-              <div class="counter-ui-item" style="
-                position: absolute;
-                left: ${18 * tileSize - 8}px;
-                top: ${4 * tileSize}px;
-                width: 48px;
-                height: 48px;
-                z-index: 15;
-                cursor: pointer;
-                transition: transform 0.2s ease;
-              " data-navigate="flavor-collection">
-                <div class="ui-icon-container">
-                  <span class="material-icons ui-icon">science</span>
-                </div>
-                <div class="ui-label">Flavors</div>
-              </div>
-
-              <!-- Memories UI -->
-              <div class="counter-ui-item" style="
-                position: absolute;
-                left: ${18 * tileSize - 8}px;
-                top: ${6 * tileSize}px;
-                width: 48px;
-                height: 48px;
-                z-index: 15;
-                cursor: pointer;
-                transition: transform 0.2s ease;
-              " data-navigate="journal">
-                <div class="ui-icon-container">
-                  <span class="material-icons ui-icon">favorite</span>
-                </div>
-                <div class="ui-label">Memories</div>
-              </div>
+              ${this.renderCounterUIElements()}
             </div>
           </div>
         </div>
@@ -198,6 +149,38 @@ export class CafeHubScreen extends BaseScreen {
     }
 
     return html;
+  }
+
+  /**
+   * Render counter UI elements with responsive positioning
+   */
+  private renderCounterUIElements(): string {
+    const { width, tileSize } = this.tileSystem.getDimensions();
+    const counterX = width - 2; // Counter position
+    
+    const uiElements = [
+      { id: 'orders', icon: 'assignment', label: 'Orders', navigate: 'orders', yOffset: 1 },
+      { id: 'flavors', icon: 'science', label: 'Flavors', navigate: 'flavor-collection', yOffset: 3 },
+      { id: 'memories', icon: 'favorite', label: 'Memories', navigate: 'journal', yOffset: 5 }
+    ];
+
+    return uiElements.map(element => `
+      <div class="counter-ui-item" style="
+        position: absolute;
+        left: ${counterX * tileSize - 8}px;
+        top: ${element.yOffset * tileSize}px;
+        width: 48px;
+        height: 48px;
+        z-index: 15;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+      " data-navigate="${element.navigate}">
+        <div class="ui-icon-container">
+          <span class="material-icons ui-icon">${element.icon}</span>
+        </div>
+        <div class="ui-label">${element.label}</div>
+      </div>
+    `).join('');
   }
 
   /**
@@ -353,25 +336,26 @@ export class CafeHubScreen extends BaseScreen {
       .cafe-hub-placeholder {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 10px;
         padding: 10px;
         padding-top: 80px; /* Leave space for persistent header */
         min-height: calc(100vh - 80px);
         background: linear-gradient(135deg, #ffeef4 0%, #ffd6e1 100%);
-        overflow-x: auto;
+        overflow: hidden; /* No scrolling needed */
       }
 
       .cafe-scene-container {
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: flex-start;
         width: 100%;
-        overflow: auto;
+        height: 100%;
+        overflow: hidden; /* No scrolling */
       }
 
       .cafe-grid {
-        min-width: 320px; /* Minimum width for mobile */
-        max-width: 100vw;
+        /* Grid size is now calculated dynamically */
+        position: relative;
       }
 
       .tile {
@@ -559,21 +543,11 @@ export class CafeHubScreen extends BaseScreen {
         font-size: 14px;
       }
 
-      /* Mobile-first responsive design */
+      /* Responsive adjustments without scaling */
       @media (max-width: 480px) {
         .cafe-hub-placeholder {
           padding: 5px;
           padding-top: 70px;
-        }
-        
-        .cafe-grid {
-          transform: scale(0.6);
-          transform-origin: center top;
-          margin: 10px auto;
-        }
-        
-        .counter-ui-item {
-          transform: scale(0.8);
         }
         
         .ui-icon-container {
@@ -582,11 +556,10 @@ export class CafeHubScreen extends BaseScreen {
         }
         
         .ui-icon {
-          font-size: 20px;
+          font-size: 18px;
         }
         
         .ui-label {
-          top: 44px;
           font-size: 9px;
         }
       }
@@ -597,27 +570,17 @@ export class CafeHubScreen extends BaseScreen {
           padding-top: 75px;
         }
         
-        .cafe-grid {
-          transform: scale(0.75);
-          transform-origin: center top;
-          margin: 15px auto;
+        .ui-icon-container {
+          width: 44px;
+          height: 44px;
         }
         
-        .counter-ui-item {
-          transform: scale(0.9);
+        .ui-icon {
+          font-size: 20px;
         }
-      }
-
-      @media (min-width: 769px) and (max-width: 1024px) {
-        .cafe-grid {
-          transform: scale(0.9);
-          transform-origin: center;
-        }
-      }
-
-      @media (min-width: 1025px) {
-        .cafe-grid {
-          transform: scale(1);
+        
+        .ui-label {
+          font-size: 10px;
         }
       }
 
@@ -644,6 +607,9 @@ export class CafeHubScreen extends BaseScreen {
     // Initialize movement system when screen is shown
     this.initializeMovementSystem();
     
+    // Add resize listener for responsive updates
+    this.setupResizeListener();
+    
     // Render characters after a short delay to ensure DOM is ready
     setTimeout(() => {
       this.renderCharacters();
@@ -655,6 +621,35 @@ export class CafeHubScreen extends BaseScreen {
         }, 1000); // Re-render every second
       }
     }, 100);
+  }
+
+  /**
+   * Setup window resize listener for responsive updates
+   */
+  private setupResizeListener(): void {
+    const handleResize = () => {
+      // Recreate tile system with new dimensions
+      this._tileSystem = null; // Reset to trigger recreation
+      
+      // Re-render the entire screen content
+      const element = this.element;
+      if (element) {
+        element.innerHTML = this.createContent();
+        
+        // Re-initialize movement system and characters
+        this.initializeMovementSystem();
+        setTimeout(() => {
+          this.renderCharacters();
+        }, 100);
+      }
+    };
+
+    // Debounce resize events
+    let resizeTimeout: number;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = window.setTimeout(handleResize, 250);
+    });
   }
 
 
