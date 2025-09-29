@@ -13,6 +13,7 @@ import { getNpcPortraitPath } from '@/utils/AssetPaths';
 
 export class OrdersScreen extends BaseScreen {
   private _mockOrders: OrderBase[] | null = null;
+  private _staticNPCOrders: OrderBase[] | null = null;
   private orderGenerator: OrderGenerator | null = null;
 
   constructor(
@@ -30,7 +31,7 @@ export class OrdersScreen extends BaseScreen {
     // Use OrderGenerator orders if available, otherwise fall back to static mock orders
     if (this.orderGenerator) {
       const generatedOrders = this.orderGenerator.getActiveOrders();
-      const staticNPCOrders = OrdersScreen.createMockOrders().filter(o => o.kind === 'NPC');
+      const staticNPCOrders = this.getStaticNPCOrders();
       return [...generatedOrders, ...staticNPCOrders];
     }
     
@@ -38,6 +39,13 @@ export class OrdersScreen extends BaseScreen {
       this._mockOrders = OrdersScreen.createMockOrders();
     }
     return this._mockOrders;
+  }
+
+  private getStaticNPCOrders(): OrderBase[] {
+    if (!this._staticNPCOrders) {
+      this._staticNPCOrders = OrdersScreen.createMockOrders().filter(o => o.kind === 'NPC');
+    }
+    return this._staticNPCOrders;
   }
 
   /**
@@ -538,9 +546,14 @@ export class OrdersScreen extends BaseScreen {
    */
   private fulfillOrder(orderId: string): void {
     const order = this.mockOrders.find(o => o.orderId === orderId);
-    if (!order) return;
+    if (!order) {
+      console.error(`Order not found: ${orderId}`);
+      return;
+    }
 
-    // Award rewards
+    console.log(`Fulfilling ${order.kind} order: ${orderId}`, order);
+
+    // Award currency rewards
     this.gameState.addCoins(order.rewards.coins);
     if (order.rewards.diamonds) {
       this.gameState.addDiamonds(order.rewards.diamonds);
@@ -554,9 +567,20 @@ export class OrdersScreen extends BaseScreen {
     // Remove order from list
     if (this.orderGenerator && order.kind === 'Customer') {
       // Use OrderGenerator to complete customer orders
+      console.log(`Completing customer order via OrderGenerator: ${orderId}`);
       this.orderGenerator.completeOrder(orderId);
+    } else if (order.kind === 'NPC') {
+      // Handle static NPC orders
+      console.log(`Completing NPC order: ${orderId}, current NPC orders:`, this._staticNPCOrders?.length);
+      if (this._staticNPCOrders) {
+        const beforeCount = this._staticNPCOrders.length;
+        this._staticNPCOrders = this._staticNPCOrders.filter(o => o.orderId !== orderId);
+        const afterCount = this._staticNPCOrders.length;
+        console.log(`NPC orders: ${beforeCount} -> ${afterCount}`);
+      }
     } else {
-      // Handle static mock orders (NPC orders)
+      // Handle other static mock orders
+      console.log(`Completing other static order: ${orderId}`);
       this._mockOrders = this.mockOrders.filter(o => o.orderId !== orderId);
     }
 
