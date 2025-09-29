@@ -322,10 +322,10 @@ export class TileSystem {
       }
     }
 
-    // Add counter
-    for (let x = 6; x < 14; x++) {
+    // Add vertical counter at top-right (x=18, y=2-7)
+    for (let y = 2; y < 8; y++) {
       tileSystem.addTile('objects', {
-        position: { x, y: 8 },
+        position: { x: 18, y },
         type: 'counter',
         walkable: false,
         interactive: false,

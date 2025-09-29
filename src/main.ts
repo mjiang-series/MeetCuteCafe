@@ -72,6 +72,9 @@ class MeetCuteCafeGame {
       this.orderGenerator.start();
       console.log('✅ Order generation started');
 
+      // Ensure persistent header is visible and set to cafe-hub variant
+      this.eventSystem.emit('header:set_variant', { variant: 'cafe-hub' });
+      
       // Start with café hub
       this.screenManager.navigateTo('cafe-hub');
 

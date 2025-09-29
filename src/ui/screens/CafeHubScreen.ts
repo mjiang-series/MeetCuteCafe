@@ -73,6 +73,60 @@ export class CafeHubScreen extends BaseScreen {
             ">
               <!-- Characters will be positioned here dynamically -->
             </div>
+            
+            <!-- UI Elements docked to counter -->
+            <div class="counter-ui-elements">
+              <!-- Orders UI -->
+              <div class="counter-ui-item" style="
+                position: absolute;
+                left: ${18 * tileSize - 8}px;
+                top: ${2 * tileSize}px;
+                width: 48px;
+                height: 48px;
+                z-index: 15;
+                cursor: pointer;
+                transition: transform 0.2s ease;
+              " data-navigate="orders">
+                <div class="ui-icon-container">
+                  <span class="material-icons ui-icon">assignment</span>
+                </div>
+                <div class="ui-label">Orders</div>
+              </div>
+
+              <!-- Flavors UI -->
+              <div class="counter-ui-item" style="
+                position: absolute;
+                left: ${18 * tileSize - 8}px;
+                top: ${4 * tileSize}px;
+                width: 48px;
+                height: 48px;
+                z-index: 15;
+                cursor: pointer;
+                transition: transform 0.2s ease;
+              " data-navigate="flavor-collection">
+                <div class="ui-icon-container">
+                  <span class="material-icons ui-icon">science</span>
+                </div>
+                <div class="ui-label">Flavors</div>
+              </div>
+
+              <!-- Memories UI -->
+              <div class="counter-ui-item" style="
+                position: absolute;
+                left: ${18 * tileSize - 8}px;
+                top: ${6 * tileSize}px;
+                width: 48px;
+                height: 48px;
+                z-index: 15;
+                cursor: pointer;
+                transition: transform 0.2s ease;
+              " data-navigate="journal">
+                <div class="ui-icon-container">
+                  <span class="material-icons ui-icon">favorite</span>
+                </div>
+                <div class="ui-label">Memories</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -300,16 +354,24 @@ export class CafeHubScreen extends BaseScreen {
         display: flex;
         flex-direction: column;
         gap: 20px;
-        padding: 20px;
+        padding: 10px;
         padding-top: 80px; /* Leave space for persistent header */
         min-height: calc(100vh - 80px);
         background: linear-gradient(135deg, #ffeef4 0%, #ffd6e1 100%);
+        overflow-x: auto;
       }
 
       .cafe-scene-container {
         display: flex;
         justify-content: center;
         align-items: center;
+        width: 100%;
+        overflow: auto;
+      }
+
+      .cafe-grid {
+        min-width: 320px; /* Minimum width for mobile */
+        max-width: 100vw;
       }
 
       .tile {
@@ -369,6 +431,60 @@ export class CafeHubScreen extends BaseScreen {
       .characters-layer .character {
         position: absolute !important;
         z-index: 20 !important;
+      }
+
+      /* Counter UI Elements */
+      .counter-ui-item {
+        pointer-events: auto;
+      }
+
+      .counter-ui-item:hover {
+        transform: scale(1.1);
+      }
+
+      .ui-icon-container {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(142, 68, 173, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.2s ease;
+      }
+
+      .counter-ui-item:hover .ui-icon-container {
+        box-shadow: 0 6px 16px rgba(142, 68, 173, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .ui-icon {
+        color: white;
+        font-size: 24px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      }
+
+      .ui-label {
+        position: absolute;
+        top: 52px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #8e44ad;
+        border-radius: 8px;
+        padding: 2px 6px;
+        font-size: 10px;
+        font-weight: bold;
+        color: #8e44ad;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .counter-ui-item:hover .ui-label {
+        opacity: 1;
       }
 
       .cafe-status-panel {
@@ -443,22 +559,78 @@ export class CafeHubScreen extends BaseScreen {
         font-size: 14px;
       }
 
-      @media (max-width: 768px) {
+      /* Mobile-first responsive design */
+      @media (max-width: 480px) {
         .cafe-hub-placeholder {
-          padding: 10px;
+          padding: 5px;
+          padding-top: 70px;
         }
         
         .cafe-grid {
+          transform: scale(0.6);
+          transform-origin: center top;
+          margin: 10px auto;
+        }
+        
+        .counter-ui-item {
           transform: scale(0.8);
+        }
+        
+        .ui-icon-container {
+          width: 40px;
+          height: 40px;
+        }
+        
+        .ui-icon {
+          font-size: 20px;
+        }
+        
+        .ui-label {
+          top: 44px;
+          font-size: 9px;
+        }
+      }
+
+      @media (min-width: 481px) and (max-width: 768px) {
+        .cafe-hub-placeholder {
+          padding: 8px;
+          padding-top: 75px;
+        }
+        
+        .cafe-grid {
+          transform: scale(0.75);
+          transform-origin: center top;
+          margin: 15px auto;
+        }
+        
+        .counter-ui-item {
+          transform: scale(0.9);
+        }
+      }
+
+      @media (min-width: 769px) and (max-width: 1024px) {
+        .cafe-grid {
+          transform: scale(0.9);
           transform-origin: center;
         }
-        
-        .status-grid {
-          grid-template-columns: 1fr;
+      }
+
+      @media (min-width: 1025px) {
+        .cafe-grid {
+          transform: scale(1);
+        }
+      }
+
+      /* Ensure touch targets are accessible on mobile */
+      @media (hover: none) and (pointer: coarse) {
+        .counter-ui-item {
+          min-width: 44px;
+          min-height: 44px;
         }
         
-        .quick-actions {
-          flex-direction: column;
+        .character.npc {
+          min-width: 32px;
+          min-height: 32px;
         }
       }`;
   }
