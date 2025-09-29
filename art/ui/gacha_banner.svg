@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="200" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bannerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFB6C1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFE0CC;stop-opacity:1" />
+    </linearGradient>
+    <pattern id="paws" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M20 15 C18 13, 16 13, 15 15 C14 16, 14 18, 15 19 C16 20, 18 20, 20 18 C22 20, 24 20, 25 19 C26 18, 26 16, 25 15 C24 13, 22 13, 20 15 Z" fill="#FF9E80" opacity="0.3"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="200" fill="url(#bannerGradient)"/>
+  
+  <!-- Paw pattern overlay -->
+  <rect width="400" height="200" fill="url(#paws)" opacity="0.5"/>
+  
+  <!-- Center circle decoration -->
+  <circle cx="200" cy="100" r="80" fill="white" opacity="0.3"/>
+  <circle cx="200" cy="100" r="60" fill="white" opacity="0.3"/>
+  
+  <!-- Pet silhouettes -->
+  <g transform="translate(200, 100)">
+    <!-- Cat -->
+    <path d="M-30 -20 C-35 -25, -35 -30, -30 -35 C-25 -30, -25 -25, -20 -20 L-20 0 C-20 10, -10 15, 0 15 C10 15, 20 10, 20 0 L20 -20 C25 -25, 25 -30, 30 -35 C35 -30, 35 -25, 30 -20 L30 -10 C30 5, 15 20, 0 20 C-15 20, -30 5, -30 -10 Z" 
+          fill="#FF7043" opacity="0.6" transform="translate(-50, 0) scale(0.8)"/>
+    
+    <!-- Dog -->
+    <ellipse cx="50" cy="0" rx="25" ry="20" fill="#FFCA28" opacity="0.6"/>
+    <ellipse cx="50" cy="-15" rx="15" ry="15" fill="#FFCA28" opacity="0.6"/>
+    <rect x="45" y="-5" width="10" height="20" fill="#FFCA28" opacity="0.6"/>
+    
+    <!-- Bunny -->
+    <ellipse cx="0" cy="0" rx="20" ry="25" fill="#4CAF50" opacity="0.6"/>
+    <ellipse cx="-8" cy="-20" rx="5" ry="15" fill="#4CAF50" opacity="0.6"/>
+    <ellipse cx="8" cy="-20" rx="5" ry="15" fill="#4CAF50" opacity="0.6"/>
+  </g>
+  
+  <!-- Stars decoration -->
+  <g opacity="0.8">
+    <path d="M50 40 L52 46 L58 46 L53 50 L55 56 L50 52 L45 56 L47 50 L42 46 L48 46 Z" fill="white"/>
+    <path d="M350 40 L352 46 L358 46 L353 50 L355 56 L350 52 L345 56 L347 50 L342 46 L348 46 Z" fill="white"/>
+    <path d="M100 160 L102 166 L108 166 L103 170 L105 176 L100 172 L95 176 L97 170 L92 166 L98 166 Z" fill="white"/>
+    <path d="M300 160 L302 166 L308 166 L303 170 L305 176 L300 172 L295 176 L297 170 L292 166 L298 166 Z" fill="white"/>
+  </g>
+  
+  <!-- Text placeholder area -->
+  <rect x="100" y="140" width="200" height="40" fill="white" opacity="0.5" rx="20"/>
+</svg>
