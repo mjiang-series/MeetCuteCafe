@@ -1,0 +1,64 @@
+{
+  "npcs": {
+    "aria": {
+      "npcId": "aria",
+      "displayName": "Aria",
+      "personaTags": ["gentle", "thoughtful", "caring", "bakery-focused"],
+      "bondGates": [
+        {
+          "level": 1,
+          "unlocks": ["DM"]
+        },
+        {
+          "level": 2,
+          "unlocks": ["Call"]
+        },
+        {
+          "level": 3,
+          "unlocks": ["Scene"]
+        }
+      ],
+      "portraitIds": ["aria_portrait"]
+    },
+    "kai": {
+      "npcId": "kai",
+      "displayName": "Kai", 
+      "personaTags": ["playful", "teasing", "loyal", "playground-focused"],
+      "bondGates": [
+        {
+          "level": 1,
+          "unlocks": ["DM"]
+        },
+        {
+          "level": 2,
+          "unlocks": ["Call"]
+        },
+        {
+          "level": 3,
+          "unlocks": ["Scene"]
+        }
+      ],
+      "portraitIds": ["kai_portrait"]
+    },
+    "elias": {
+      "npcId": "elias",
+      "displayName": "Elias",
+      "personaTags": ["elegant", "witty", "genderfluid", "styling-focused"],
+      "bondGates": [
+        {
+          "level": 1,
+          "unlocks": ["DM"]
+        },
+        {
+          "level": 2,
+          "unlocks": ["Call"]
+        },
+        {
+          "level": 3,
+          "unlocks": ["Scene"]
+        }
+      ],
+      "portraitIds": ["elias_portrait"]
+    }
+  }
+}

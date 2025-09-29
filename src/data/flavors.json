@@ -1,0 +1,118 @@
+{
+  "flavors": {
+    "sweet_vanilla": {
+      "flavorId": "sweet_vanilla",
+      "name": "Vanilla Dream",
+      "affinity": "Sweet",
+      "rarity": "3★",
+      "artKeyframeId": "vanilla_keyframe",
+      "loreTag": "classic",
+      "basePower": 10
+    },
+    "sweet_chocolate": {
+      "flavorId": "sweet_chocolate",
+      "name": "Rich Chocolate",
+      "affinity": "Sweet",
+      "rarity": "3★",
+      "artKeyframeId": "chocolate_keyframe",
+      "loreTag": "indulgent",
+      "basePower": 12
+    },
+    "sweet_strawberry": {
+      "flavorId": "sweet_strawberry",
+      "name": "Berry Bliss",
+      "affinity": "Sweet",
+      "rarity": "4★",
+      "artKeyframeId": "strawberry_keyframe",
+      "loreTag": "fresh",
+      "basePower": 20
+    },
+    "salty_caramel": {
+      "flavorId": "salty_caramel",
+      "name": "Salted Caramel",
+      "affinity": "Salty",
+      "rarity": "3★",
+      "artKeyframeId": "caramel_keyframe",
+      "loreTag": "balanced",
+      "basePower": 11
+    },
+    "salty_pretzel": {
+      "flavorId": "salty_pretzel",
+      "name": "Twisted Pretzel",
+      "affinity": "Salty",
+      "rarity": "4★",
+      "artKeyframeId": "pretzel_keyframe",
+      "loreTag": "savory",
+      "basePower": 18
+    },
+    "bitter_coffee": {
+      "flavorId": "bitter_coffee",
+      "name": "Dark Roast",
+      "affinity": "Bitter",
+      "rarity": "3★",
+      "artKeyframeId": "coffee_keyframe",
+      "loreTag": "energizing",
+      "basePower": 13
+    },
+    "bitter_dark_chocolate": {
+      "flavorId": "bitter_dark_chocolate",
+      "name": "85% Cacao",
+      "affinity": "Bitter",
+      "rarity": "4★",
+      "artKeyframeId": "dark_choc_keyframe",
+      "loreTag": "sophisticated",
+      "basePower": 22
+    },
+    "spicy_cinnamon": {
+      "flavorId": "spicy_cinnamon",
+      "name": "Cinnamon Fire",
+      "affinity": "Spicy",
+      "rarity": "3★",
+      "artKeyframeId": "cinnamon_keyframe",
+      "loreTag": "warming",
+      "basePower": 14
+    },
+    "spicy_chili": {
+      "flavorId": "spicy_chili",
+      "name": "Chili Heat",
+      "affinity": "Spicy",
+      "rarity": "4★",
+      "artKeyframeId": "chili_keyframe",
+      "loreTag": "intense",
+      "basePower": 19
+    },
+    "fresh_mint": {
+      "flavorId": "fresh_mint",
+      "name": "Cool Mint",
+      "affinity": "Fresh",
+      "rarity": "3★",
+      "artKeyframeId": "mint_keyframe",
+      "loreTag": "refreshing",
+      "basePower": 9
+    },
+    "fresh_lemon": {
+      "flavorId": "fresh_lemon",
+      "name": "Zesty Lemon",
+      "affinity": "Fresh",
+      "rarity": "4★",
+      "artKeyframeId": "lemon_keyframe",
+      "loreTag": "bright",
+      "basePower": 17
+    },
+    "sweet_legendary": {
+      "flavorId": "sweet_legendary",
+      "name": "Ambrosia Essence",
+      "affinity": "Sweet",
+      "rarity": "5★",
+      "artKeyframeId": "ambrosia_keyframe",
+      "loreTag": "legendary",
+      "basePower": 35
+    }
+  },
+  "starterFlavors": [
+    "sweet_vanilla",
+    "salty_caramel", 
+    "bitter_coffee",
+    "fresh_mint"
+  ]
+}

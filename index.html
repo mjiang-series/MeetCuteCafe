@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/art/game_logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meet Cute Cafe</title>
+    <meta name="description" content="A dating-sim × idle autobattler hybrid romance game" />
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="/art/game_logo.png" as="image" />
+    <link rel="preload" href="/art/npc/aria/aria_portrait.png" as="image" />
+    <link rel="preload" href="/art/npc/kai/kai_portrait.png" as="image" />
+    <link rel="preload" href="/art/npc/elias/elias_portrait.png" as="image" />
+    
+    <!-- PWA meta tags -->
+    <meta name="theme-color" content="#e17497" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Meet Cute Cafe" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Loading screen -->
+      <div id="loading-screen" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #ffeef4 0%, #ffd6e1 50%, #ffb8c6 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      ">
+        <img src="/art/game_logo.png" alt="Meet Cute Cafe" style="
+          width: 200px;
+          height: auto;
+          margin-bottom: 20px;
+          animation: pulse 2s infinite;
+        " />
+        <h1 style="
+          color: #2d3436;
+          font-size: 2rem;
+          margin-bottom: 10px;
+        ">Meet Cute Cafe</h1>
+        <p style="
+          color: #636e72;
+          font-size: 1rem;
+        ">Loading your romantic adventure...</p>
+        
+        <style>
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+        </style>
+      </div>
+    </div>
+    
+    <script type="module" src="/src/main.ts"></script>
+    
+    <script>
+      // Remove loading screen once the app initializes
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const loadingScreen = document.getElementById('loading-screen');
+          if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+              loadingScreen.remove();
+            }, 500);
+          }
+        }, 1000); // Show loading for at least 1 second
+      });
+    </script>
+  </body>
+</html>

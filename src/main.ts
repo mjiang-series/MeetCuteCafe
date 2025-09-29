@@ -1,0 +1,253 @@
+/**
+ * Main entry point for Meet Cute Cafe
+ */
+
+import { EventSystem } from '@/systems/EventSystem';
+import { GameStateManager } from '@/systems/GameStateManager';
+import { AssetManager } from '@/systems/AssetManager';
+import { OrderGenerator } from '@/systems/OrderGenerator';
+import { ScreenManager } from '@/ui/ScreenManager';
+import { PersistentHeader } from '@/ui/PersistentHeader';
+import { CafeHubScreen } from '@/ui/screens/CafeHubScreen';
+import { OrdersScreen } from '@/ui/screens/OrdersScreen';
+import { FlavorCollectionScreen } from '@/ui/screens/FlavorCollectionScreen';
+
+// Import styles
+import '@/styles/screens.css';
+
+class MeetCuteCafeGame {
+  private eventSystem: EventSystem;
+  private gameStateManager: GameStateManager;
+  private assetManager: AssetManager;
+  private orderGenerator: OrderGenerator;
+  private screenManager: ScreenManager;
+  private persistentHeader: PersistentHeader;
+
+  constructor() {
+    this.eventSystem = new EventSystem();
+    this.gameStateManager = new GameStateManager(this.eventSystem);
+    this.assetManager = new AssetManager(this.eventSystem);
+    this.orderGenerator = new OrderGenerator(this.eventSystem);
+    // ScreenManager and PersistentHeader will be initialized after UI setup
+    this.screenManager = null as any; // Temporary
+    this.persistentHeader = null as any; // Temporary
+
+    this.setupEventListeners();
+  }
+
+  async initialize(): Promise<void> {
+    try {
+      console.log('🎮 Initializing Meet Cute Cafe...');
+
+      // Validate critical assets first
+      const assetValidation = await this.assetManager.validateCriticalAssets();
+      if (!assetValidation.valid) {
+        console.warn('Some assets are missing:', assetValidation.missing);
+        // Continue anyway for development
+      }
+
+      // Preload critical assets
+      await this.assetManager.preloadCriticalAssets();
+      console.log('✅ Assets preloaded');
+
+      // Load or create player data
+      await this.gameStateManager.loadGame();
+      console.log('✅ Game state loaded');
+
+      // Initialize UI first
+      this.initializeUI();
+      
+      // Now initialize screen manager and header
+      this.screenManager = new ScreenManager(this.eventSystem);
+      this.persistentHeader = new PersistentHeader(this.eventSystem, this.gameStateManager);
+      
+      // Insert persistent header after it's created
+      this.insertPersistentHeader();
+      
+      // Initialize screens
+      this.initializeScreens();
+      console.log('✅ UI initialized');
+
+      // Start order generation
+      this.orderGenerator.start();
+      console.log('✅ Order generation started');
+
+      // Start with café hub
+      this.screenManager.navigateTo('cafe-hub');
+
+      console.log('🎉 Meet Cute Cafe ready!');
+
+    } catch (error) {
+      console.error('❌ Failed to initialize game:', error);
+      this.eventSystem.emit('game:error', {
+        error: error as Error,
+        context: 'initialization'
+      });
+    }
+  }
+
+  private setupEventListeners(): void {
+    // Handle game errors
+    this.eventSystem.on('game:error', (data) => {
+      console.error(`Game error in ${data.context}:`, data.error);
+      // TODO: Show user-friendly error message
+    });
+
+    // Handle game state changes
+    this.eventSystem.on('game:loaded', (data) => {
+      console.log(`Player ${data.playerId} loaded`);
+    });
+
+    this.eventSystem.on('game:saved', (data) => {
+      console.log(`Game saved at ${new Date(data.timestamp).toLocaleTimeString()}`);
+    });
+  }
+
+  private initializeUI(): void {
+    const app = document.getElementById('app');
+    if (!app) {
+      throw new Error('App container not found');
+    }
+
+    // Create game UI structure
+    app.innerHTML = `
+      <div class="game-container">
+        <div id="main-content" class="main-content">
+          <!-- Screens will be populated by ScreenManager -->
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Insert persistent header after it's created
+   */
+  private insertPersistentHeader(): void {
+    const gameContainer = document.querySelector('.game-container');
+    if (gameContainer && this.persistentHeader) {
+      gameContainer.insertBefore(this.persistentHeader.getElement(), gameContainer.firstChild);
+    }
+  }
+
+  /**
+   * Initialize all game screens
+   */
+  private initializeScreens(): void {
+    // Create and register screens
+    const cafeHubScreen = new CafeHubScreen(this.eventSystem, this.gameStateManager, this.assetManager);
+    const ordersScreen = new OrdersScreen(this.eventSystem, this.gameStateManager, this.assetManager, this.orderGenerator);
+    const flavorCollectionScreen = new FlavorCollectionScreen(this.eventSystem, this.gameStateManager, this.assetManager);
+
+    this.screenManager.registerScreen(cafeHubScreen);
+    this.screenManager.registerScreen(ordersScreen);
+    this.screenManager.registerScreen(flavorCollectionScreen);
+  }
+
+
+  /**
+   * Get game systems (for testing)
+   */
+  getSystems(): {
+    eventSystem: EventSystem;
+    gameStateManager: GameStateManager;
+    assetManager: AssetManager;
+    orderGenerator: OrderGenerator;
+    screenManager: ScreenManager;
+    persistentHeader: PersistentHeader;
+  } {
+    return {
+      eventSystem: this.eventSystem,
+      gameStateManager: this.gameStateManager,
+      assetManager: this.assetManager,
+      orderGenerator: this.orderGenerator,
+      screenManager: this.screenManager,
+      persistentHeader: this.persistentHeader,
+    };
+  }
+
+  /**
+   * Cleanup
+   */
+  destroy(): void {
+    if (this.screenManager) {
+      this.screenManager.destroy();
+    }
+    if (this.persistentHeader) {
+      this.persistentHeader.destroy();
+    }
+    this.orderGenerator.destroy();
+    this.gameStateManager.destroy();
+    this.eventSystem.clear();
+    this.assetManager.clearCache();
+  }
+}
+
+// Initialize the game
+const game = new MeetCuteCafeGame();
+
+// Start the game when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeGame();
+  });
+} else {
+  initializeGame();
+}
+
+async function initializeGame(): Promise<void> {
+  try {
+    await game.initialize();
+  } catch (error) {
+    console.error('Failed to initialize Meet Cute Cafe:', error);
+    
+    // Show user-friendly error message
+    const app = document.getElementById('app');
+    if (app) {
+      app.innerHTML = `
+        <div style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          padding: 20px;
+          text-align: center;
+          background: linear-gradient(135deg, #ffeef4 0%, #ffd6e1 50%, #ffb8c6 100%);
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        ">
+          <div style="
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+          ">
+            <h1 style="color: #e74c3c; margin-bottom: 20px;">Oops! Something went wrong</h1>
+            <p style="color: #636e72; margin-bottom: 20px;">
+              We're having trouble loading Meet Cute Cafe. Please try refreshing the page.
+            </p>
+            <button onclick="window.location.reload()" style="
+              background: linear-gradient(135deg, #e17497, #f2a5b8);
+              color: white;
+              border: none;
+              padding: 15px 30px;
+              border-radius: 25px;
+              font-size: 1.1rem;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            ">
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      `;
+    }
+  }
+}
+
+// Export for testing
+export { MeetCuteCafeGame };
+
+// Make game available globally for debugging
+(window as unknown as { game: MeetCuteCafeGame }).game = game;
