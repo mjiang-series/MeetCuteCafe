@@ -158,7 +158,7 @@ export class CafeHubScreen extends BaseScreen {
       { id: 'orders', icon: 'assignment', label: 'Orders', navigate: 'orders', yOffset: 1 },
       { id: 'flavors', icon: 'science', label: 'Flavors', navigate: 'flavor-collection', yOffset: 3 },
       { id: 'memories', icon: 'favorite', label: 'Memories', navigate: 'journal', yOffset: 5 },
-      { id: 'dm', icon: 'chat', label: 'DMs', navigate: 'dm', yOffset: 7 }
+      { id: 'messages', icon: 'chat', label: 'Messages', navigate: 'conversation-history', yOffset: 7 }
     ];
 
     return uiElements.map(element => `
@@ -178,6 +178,23 @@ export class CafeHubScreen extends BaseScreen {
         <div class="ui-label">${element.label}</div>
       </div>
     `).join('');
+  }
+
+  /**
+   * Setup event listeners for UI interactions
+   */
+  protected override setupEventListeners(): void {
+    // Handle counter UI element clicks
+    this.element.addEventListener('click', (e) => {
+      const uiItem = (e.target as Element).closest('.counter-ui-item');
+      if (uiItem) {
+        const navigate = uiItem.getAttribute('data-navigate');
+        if (navigate) {
+          console.log(`🎯 Navigating to ${navigate}`);
+          this.eventSystem.emit('ui:show_screen', { screenId: navigate });
+        }
+      }
+    });
   }
 
   /**
@@ -291,6 +308,19 @@ export class CafeHubScreen extends BaseScreen {
         
         characterElement.appendChild(spriteElement);
 
+        // Add click handler for NPCs
+        if (character.type === 'npc') {
+          characterElement.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent event bubbling
+            e.preventDefault(); // Prevent default behavior
+            console.log(`🗨️ Opening DM with ${character.id}`);
+            this.eventSystem.emit('ui:show_screen', {
+              screenId: 'dm',
+              data: { npcId: character.id }
+            });
+          });
+        }
+
         // Add nameplate for NPCs
         if (character.type === 'npc') {
           const nameplate = document.createElement('div');
@@ -312,13 +342,6 @@ export class CafeHubScreen extends BaseScreen {
             pointer-events: none;
           `;
           characterElement.appendChild(nameplate);
-
-          // Add click handler for NPCs
-          characterElement.addEventListener('click', (e) => {
-            e.stopPropagation();
-            console.log(`Clicked on ${character.id}`);
-            this.eventSystem.emit('ui:show_screen', { screenId: 'orders' });
-          });
         }
 
         charactersLayer.appendChild(characterElement);

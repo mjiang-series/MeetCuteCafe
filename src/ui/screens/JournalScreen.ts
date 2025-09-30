@@ -10,7 +10,7 @@ import { GameStateManager } from '@/systems/GameStateManager';
 import { NPCManager } from '@/systems/NPCManager';
 import { MemoryGenerator, Memory } from '@/systems/MemoryGenerator';
 import { NpcId } from '@/models/GameTypes';
-import { getAssetPath } from '@/utils/AssetPaths';
+import { getMemoryPlaceholderPath } from '@/utils/AssetPaths';
 
 export class JournalScreen extends BaseScreen {
   private memories: Memory[] = [];
@@ -48,6 +48,7 @@ export class JournalScreen extends BaseScreen {
     }
     
     this.loadMemories();
+    this.updateContent(); // Refresh content after loading memories
     this.eventSystem.emit('header:set_variant', { variant: 'journal' });
   }
 
@@ -143,7 +144,7 @@ export class JournalScreen extends BaseScreen {
       return `
         <button class="npc-filter-option ${isActive ? 'active' : ''}" data-npc="${npc.id}">
           <div class="npc-avatar-small">
-            <img src="${getAssetPath(npc.portraitPath)}" alt="${npc.name}" />
+            <img src="${npc.portraitPath}" alt="${npc.name}" />
           </div>
           <span class="filter-label">${npc.name}</span>
           <span class="memory-count">${npcMemories.length}</span>
@@ -185,7 +186,7 @@ export class JournalScreen extends BaseScreen {
       <div class="memory-preview-card ${!memory.viewed ? 'unviewed' : ''} ${rarityClass}" 
            data-memory-id="${memory.id}">
         <div class="memory-preview-image">
-          <img src="${getAssetPath(memory.imageUrl || 'art/memories_image_placeholder.png')}" 
+          <img src="${memory.imageUrl || getMemoryPlaceholderPath()}" 
                alt="Memory" />
           <span class="memory-mood-badge mood--${memory.mood}">${memory.mood}</span>
           ${!memory.viewed ? '<span class="new-badge">NEW</span>' : ''}

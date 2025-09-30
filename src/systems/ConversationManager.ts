@@ -318,9 +318,56 @@ export class ConversationManager {
           });
         });
         this.messageIdCounter = maxId + 1;
+      } else {
+        // Generate starter conversations for new players
+        this.generateStarterConversations();
       }
     } catch (error) {
       console.warn('Failed to load conversations:', error);
+      // Generate starter conversations as fallback
+      this.generateStarterConversations();
     }
+  }
+
+  /**
+   * Generate starter conversations for new players
+   */
+  private generateStarterConversations(): void {
+    const starterMessages = {
+      aria: "Hi there! Welcome to our café! I'm Aria, and I'm so excited to meet you! ☕✨",
+      kai: "Hello. I'm Kai. I noticed you're new here. Feel free to ask me anything about our coffee selection.",
+      elias: "Hey! I'm Elias! Ready for some adventure? This café has the best energy - you're going to love it here! 🎉"
+    };
+
+    const npcs: NpcId[] = ['aria', 'kai', 'elias'];
+    
+    npcs.forEach(npcId => {
+      const conversation: Conversation = {
+        npcId,
+        messages: [{
+          id: `msg_${this.messageIdCounter++}`,
+          senderId: npcId,
+          content: starterMessages[npcId],
+          timestamp: Date.now() - (Math.random() * 60000), // Random time within last minute
+          read: false
+        }],
+        lastMessageAt: Date.now(),
+        unreadCount: 1
+      };
+      
+      this.conversations.set(npcId, conversation);
+    });
+
+    this.saveConversations();
+    console.log('🎬 Generated starter conversations for all NPCs');
+  }
+
+  /**
+   * Clear all conversations (for testing)
+   */
+  clearAllConversations(): void {
+    this.conversations.clear();
+    localStorage.removeItem('meet_cute_cafe_conversations');
+    console.log('🧹 Cleared all conversations');
   }
 }

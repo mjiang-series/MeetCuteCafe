@@ -8,7 +8,7 @@ import type { GameStateManager } from '@/systems/GameStateManager';
 import type { Player } from '@/models/GameTypes';
 import { getPlayerPortraitPath, getLogoPath } from '@/utils/AssetPaths';
 
-export type HeaderVariant = 'welcome' | 'cafe-hub' | 'orders' | 'flavor-collection' | 'journal' | 'settings' | 'results';
+export type HeaderVariant = 'welcome' | 'cafe-hub' | 'orders' | 'flavor-collection' | 'journal' | 'conversation-history' | 'dm' | 'settings' | 'results';
 
 export interface HeaderConfig {
   showCurrencies: boolean;
@@ -43,6 +43,16 @@ const HEADER_CONFIGS: Record<HeaderVariant, HeaderConfig> = {
     showCurrencies: false,
     showBackButton: true,
     title: 'Journal',
+  },
+  'conversation-history': {
+    showCurrencies: false,
+    showBackButton: true,
+    title: 'Messages',
+  },
+  dm: {
+    showCurrencies: false,
+    showBackButton: true,
+    title: 'Chat',
   },
   settings: {
     showCurrencies: false,

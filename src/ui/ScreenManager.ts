@@ -14,6 +14,7 @@ export type ScreenId =
   | 'journal'
   | 'memory-detail'
   | 'dm'
+  | 'conversation-history'
   | 'settings';
 
 export interface ScreenData {

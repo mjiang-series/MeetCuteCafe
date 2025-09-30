@@ -185,7 +185,7 @@ export class MemoryDetailScreen extends BaseScreen {
       if (npc) {
         participants += `
           <div class="participant">
-            <img src="${getAssetPath(npc.portraitPath)}" 
+            <img src="${npc.portraitPath}" 
                  alt="${npc.name}" class="participant-portrait npc" />
             <span class="participant-name">${npc.name}</span>
           </div>

@@ -70,7 +70,7 @@ export class NPCManager {
         bondXP: 0,
         unlockedFeatures: {
           orders: true,
-          dms: false,
+          dms: true, // Unlocked from start
           calls: false,
           memories: true
         }
@@ -89,7 +89,7 @@ export class NPCManager {
         bondXP: 0,
         unlockedFeatures: {
           orders: true,
-          dms: false,
+          dms: true, // Unlocked from start
           calls: false,
           memories: true
         }
@@ -108,7 +108,7 @@ export class NPCManager {
         bondXP: 0,
         unlockedFeatures: {
           orders: true,
-          dms: false,
+          dms: true, // Unlocked from start
           calls: false,
           memories: true
         }
@@ -314,7 +314,7 @@ export class NPCManager {
         npc.bondLevel = playerNpc.level;
         npc.bondXP = playerNpc.bondXp;
         npc.unlockedFeatures.calls = playerNpc.callAvailable;
-        npc.unlockedFeatures.dms = playerNpc.level >= 2;
+        npc.unlockedFeatures.dms = true; // Always unlocked
       }
     });
   }

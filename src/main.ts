@@ -17,6 +17,7 @@ import { FlavorCollectionScreen } from '@/ui/screens/FlavorCollectionScreen';
 import { JournalScreen } from '@/ui/screens/JournalScreen';
 import { MemoryDetailScreen } from '@/ui/screens/MemoryDetailScreen';
 import { DMScreen } from '@/ui/screens/DMScreen';
+import { ConversationHistoryScreen } from '@/ui/screens/ConversationHistoryScreen';
 import { OrderResultsScreen } from '@/ui/screens/OrderResultsScreen';
 
 // Import styles
@@ -231,6 +232,7 @@ class MeetCuteCafeGame {
     const journalScreen = new JournalScreen(this.eventSystem, this.gameStateManager);
     const memoryDetailScreen = new MemoryDetailScreen(this.eventSystem, this.gameStateManager);
     const dmScreen = new DMScreen(this.eventSystem, this.gameStateManager);
+    const conversationHistoryScreen = new ConversationHistoryScreen(this.eventSystem, this.gameStateManager);
     const orderResultsScreen = new OrderResultsScreen(this.eventSystem, this.gameStateManager);
 
     this.screenManager.registerScreen(cafeHubScreen);
@@ -239,6 +241,7 @@ class MeetCuteCafeGame {
     this.screenManager.registerScreen(journalScreen);
     this.screenManager.registerScreen(memoryDetailScreen);
     this.screenManager.registerScreen(dmScreen);
+    this.screenManager.registerScreen(conversationHistoryScreen);
     this.screenManager.registerScreen(orderResultsScreen);
   }
 

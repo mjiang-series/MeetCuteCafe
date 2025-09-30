@@ -9,7 +9,7 @@ import { GameStateManager } from '@/systems/GameStateManager';
 import { ConversationManager, DMMessage, ResponseOption } from '@/systems/ConversationManager';
 import { NPCManager } from '@/systems/NPCManager';
 import { NpcId } from '@/models/GameTypes';
-import { getAssetPath, getPlayerPortraitPath } from '@/utils/AssetPaths';
+import { getPlayerPortraitPath } from '@/utils/AssetPaths';
 
 export class DMScreen extends BaseScreen {
   private conversationManager!: ConversationManager;
@@ -73,7 +73,7 @@ export class DMScreen extends BaseScreen {
       <div class="dm-screen">
         <div class="dm-header">
           <div class="npc-info">
-            <img src="${getAssetPath(npc.portraitPath)}" alt="${npc.name}" class="npc-avatar" />
+            <img src="${npc.portraitPath}" alt="${npc.name}" class="npc-avatar" />
             <div class="npc-details">
               <h2>${npc.name}</h2>
               <span class="bond-level">Bond Level ${npc.bondLevel}</span>
@@ -140,7 +140,7 @@ export class DMScreen extends BaseScreen {
 
     return `
       <div class="npc-list-item ${unreadCount > 0 ? 'has-unread' : ''}" data-npc-id="${npc.id}">
-        <img src="${getAssetPath(npc.portraitPath)}" alt="${npc.name}" class="npc-avatar-small" />
+        <img src="${npc.portraitPath}" alt="${npc.name}" class="npc-avatar-small" />
         <div class="npc-info">
           <div class="npc-name">${npc.name}</div>
           <div class="last-message">${lastMessageText}</div>
@@ -187,8 +187,8 @@ export class DMScreen extends BaseScreen {
     });
 
     const avatarSrc = isPlayer ? 
-      getAssetPath(getPlayerPortraitPath()) : 
-      getAssetPath(this.npcManager?.getNPC(message.senderId as NpcId)?.portraitPath || '');
+      getPlayerPortraitPath() : 
+      (this.npcManager?.getNPC(message.senderId as NpcId)?.portraitPath || '');
 
     return `
       <div class="message ${isPlayer ? 'player-message' : 'npc-message'}">
