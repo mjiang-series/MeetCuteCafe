@@ -70,6 +70,8 @@ const HEADER_CONFIGS: Record<HeaderVariant, HeaderConfig> = {
 export class PersistentHeader {
   private element: HTMLElement;
   private currentVariant: HeaderVariant = 'welcome';
+  private customTitle?: string;
+  private npcData?: { name: string; portraitPath: string; bondLevel: number };
   private player: Player | null = null;
 
   constructor(
@@ -100,7 +102,7 @@ export class PersistentHeader {
   private setupEventListeners(): void {
     // Listen for variant changes
     this.eventSystem.on('header:set_variant', (data) => {
-      this.setVariant(data.variant as HeaderVariant);
+      this.setVariant(data.variant as HeaderVariant, data.customTitle, data.npcData);
     });
 
     // Listen for currency updates
@@ -122,8 +124,10 @@ export class PersistentHeader {
   /**
    * Set header variant
    */
-  setVariant(variant: HeaderVariant): void {
+  setVariant(variant: HeaderVariant, customTitle?: string, npcData?: { name: string; portraitPath: string; bondLevel: number }): void {
     this.currentVariant = variant;
+    this.customTitle = customTitle;
+    this.npcData = npcData;
     this.updateContent();
   }
 
@@ -186,11 +190,34 @@ export class PersistentHeader {
   }
 
   /**
+   * Render NPC info (same style as player info)
+   */
+  private renderNPCInfo(): string {
+    if (!this.npcData) return '';
+    
+    return `
+      <div class="player-info">
+        <img src="${this.npcData.portraitPath}" alt="${this.npcData.name}" class="player-avatar" />
+        <div class="player-details">
+          <div class="player-name">${this.npcData.name}</div>
+          <div class="player-level">Bond Level ${this.npcData.bondLevel}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * Render center section
    */
   private renderCenterSection(config: HeaderConfig): string {
-    if (config.title) {
-      return `<h1 class="screen-title">${config.title}</h1>`;
+    // Show NPC info in center when in DM mode
+    if (this.currentVariant === 'dm' && this.npcData) {
+      return this.renderNPCInfo();
+    }
+    
+    const title = this.customTitle || config.title;
+    if (title) {
+      return `<h1 class="screen-title">${title}</h1>`;
     }
 
     if (config.showCurrencies && this.player) {

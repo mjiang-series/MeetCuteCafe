@@ -14,6 +14,7 @@ import { getPlayerPortraitPath } from '@/utils/AssetPaths';
 export class DMScreen extends BaseScreen {
   private conversationManager!: ConversationManager;
   private npcManager!: NPCManager;
+  private gameStateManager: GameStateManager;
   private currentNpcId: NpcId | null = null;
   private messages: DMMessage[] = [];
   private availableResponses: ResponseOption[] = [];
@@ -23,6 +24,7 @@ export class DMScreen extends BaseScreen {
     gameStateManager: GameStateManager
   ) {
     super('dm', eventSystem, gameStateManager, null as any);
+    this.gameStateManager = gameStateManager;
   }
 
   override onShow(data?: { npcId: NpcId }): void {
@@ -41,7 +43,27 @@ export class DMScreen extends BaseScreen {
     }
 
     this.updateContent();
-    this.eventSystem.emit('header:set_variant', { variant: 'dm', parentContext: 'cafe-hub' });
+    
+    // Set header with NPC info
+    if (this.currentNpcId && this.npcManager) {
+      const npc = this.npcManager.getNPC(this.currentNpcId);
+      if (npc) {
+        const bondLevel = this.gameStateManager?.getPlayer()?.npc?.[this.currentNpcId]?.level || 1;
+        this.eventSystem.emit('header:set_variant', { 
+          variant: 'dm',
+          npcData: {
+            name: npc.name,
+            portraitPath: npc.portraitPath,
+            bondLevel: bondLevel
+          },
+          parentContext: 'cafe-hub' 
+        });
+      } else {
+        this.eventSystem.emit('header:set_variant', { variant: 'dm', parentContext: 'cafe-hub' });
+      }
+    } else {
+      this.eventSystem.emit('header:set_variant', { variant: 'dm', parentContext: 'cafe-hub' });
+    }
   }
 
   private loadConversation(): void {
@@ -71,16 +93,6 @@ export class DMScreen extends BaseScreen {
 
     return `
       <div class="dm-screen">
-        <div class="dm-header">
-          <div class="npc-info">
-            <img src="${npc.portraitPath}" alt="${npc.name}" class="npc-avatar" />
-            <div class="npc-details">
-              <h2>${npc.name}</h2>
-              <span class="bond-level">Bond Level ${npc.bondLevel}</span>
-            </div>
-          </div>
-        </div>
-
         <div class="messages-container" id="messages-container">
           <div class="messages-list" id="messages-list">
             ${this.renderMessages()}

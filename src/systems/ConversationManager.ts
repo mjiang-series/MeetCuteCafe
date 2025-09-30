@@ -334,9 +334,9 @@ export class ConversationManager {
    */
   private generateStarterConversations(): void {
     const starterMessages = {
-      aria: "Hi there! Welcome to our café! I'm Aria, and I'm so excited to meet you! ☕✨",
-      kai: "Hello. I'm Kai. I noticed you're new here. Feel free to ask me anything about our coffee selection.",
-      elias: "Hey! I'm Elias! Ready for some adventure? This café has the best energy - you're going to love it here! 🎉"
+      aria: "Hey! It was so nice meeting you at the café today! 😊 I hope you enjoyed your time there. Feel free to message me anytime - I love chatting with new friends! ☕✨",
+      kai: "Hello again. Thanks for stopping by the café earlier. I appreciate customers who take the time to really connect. If you have any questions about coffee or just want to talk, I'm here.",
+      elias: "Yo! That was awesome meeting you at the café! 🎉 The energy was perfect today, wasn't it? Hit me up whenever - I'm always down to chat about adventures, coffee, or whatever's on your mind!"
     };
 
     const npcs: NpcId[] = ['aria', 'kai', 'elias'];
@@ -369,5 +369,14 @@ export class ConversationManager {
     this.conversations.clear();
     localStorage.removeItem('meet_cute_cafe_conversations');
     console.log('🧹 Cleared all conversations');
+  }
+
+  /**
+   * Force regenerate conversations with new greeting messages
+   */
+  regenerateConversations(): void {
+    this.clearAllConversations();
+    this.generateStarterConversations();
+    console.log('🔄 Regenerated conversations with new greetings');
   }
 }

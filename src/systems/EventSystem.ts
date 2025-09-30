@@ -42,7 +42,12 @@ export type EventMap = {
   'ui:notification': { message: string; type: 'info' | 'success' | 'warning' | 'error' };
 
   // Header events
-  'header:set_variant': { variant: string; parentContext?: string };
+  'header:set_variant': { 
+    variant: string; 
+    customTitle?: string; 
+    npcData?: { name: string; portraitPath: string; bondLevel: number };
+    parentContext?: string;
+  };
   'header:update_currency': { currency: string; value: number };
 
   // Conversation events

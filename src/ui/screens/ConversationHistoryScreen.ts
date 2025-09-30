@@ -109,9 +109,14 @@ export class ConversationHistoryScreen extends BaseScreen {
   }
 
   protected override setupEventListeners(): void {
+    super.setupEventListeners();
+    
     this.element.addEventListener('click', (e) => {
       const conversationItem = (e.target as Element).closest('.conversation-item');
       if (conversationItem) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         const npcId = conversationItem.getAttribute('data-npc-id') as NpcId;
         console.log(`🔍 Conversation item clicked, NPC ID: ${npcId}`);
         if (npcId) {

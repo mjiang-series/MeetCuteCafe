@@ -49,6 +49,7 @@ export class JournalScreen extends BaseScreen {
     
     this.loadMemories();
     this.updateContent(); // Refresh content after loading memories
+    this.setupMemoryCardListeners(); // Ensure memory cards are clickable
     this.eventSystem.emit('header:set_variant', { variant: 'journal' });
   }
 
@@ -104,17 +105,12 @@ export class JournalScreen extends BaseScreen {
         if (npcId) {
           this.setNPCFilter(npcId);
         }
-      }
-      
-      // Memory card clicks
-      const memoryCard = target.closest('.memory-preview-card') as HTMLElement;
-      if (memoryCard) {
-        const memoryId = memoryCard.dataset.memoryId;
-        if (memoryId) {
-          this.viewMemory(memoryId);
-        }
+        return; // Prevent event from bubbling to memory card handler
       }
     });
+
+    // Set up initial memory card listeners
+    this.setupMemoryCardListeners();
 
     // Listen for new memories
     this.eventSystem.on('memory:created', () => {
@@ -261,7 +257,29 @@ export class JournalScreen extends BaseScreen {
     const timelineContent = this.element.querySelector('#timeline-content');
     if (timelineContent) {
       timelineContent.innerHTML = this.renderMemoryCards();
+      // Re-bind event listeners for the new memory cards
+      this.setupMemoryCardListeners();
     }
+  }
+
+  private setupMemoryCardListeners(): void {
+    // Remove existing listeners to prevent duplicates
+    this.element.querySelectorAll('.memory-preview-card').forEach(card => {
+      const newCard = card.cloneNode(true);
+      card.parentNode?.replaceChild(newCard, card);
+    });
+    
+    // Add click listeners to memory cards
+    this.element.querySelectorAll('.memory-preview-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const memoryId = (card as HTMLElement).dataset.memoryId;
+        if (memoryId) {
+          this.viewMemory(memoryId);
+        }
+      });
+    });
   }
 
   private viewMemory(memoryId: string): void {

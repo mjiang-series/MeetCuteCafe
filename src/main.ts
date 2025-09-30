@@ -2,6 +2,10 @@
  * Main entry point for Meet Cute Cafe
  */
 
+// Import styles
+import '@/styles/responsive.css';
+import '@/styles/screens.css';
+
 import { EventSystem } from '@/systems/EventSystem';
 import { GameStateManager } from '@/systems/GameStateManager';
 import { AssetManager } from '@/systems/AssetManager';
