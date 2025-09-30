@@ -4,7 +4,7 @@
  */
 
 // Core game types
-export type Affinity = 'Sweet' | 'Salty' | 'Bitter' | 'Spicy' | 'Fresh';
+export type Affinity = 'Sweet' | 'Salty' | 'Bitter' | 'Spicy' | 'Fresh' | 'Floral' | 'Fruity' | 'Earthy' | 'Complex' | 'Bold' | 'Exotic';
 export type Rarity = '3★' | '4★' | '5★';
 export type OrderKind = 'Customer' | 'NPC';
 export type MemoryFormat = 'Drabble' | 'DM' | 'VN';

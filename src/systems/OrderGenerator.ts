@@ -4,6 +4,7 @@
 
 import type { OrderBase, Affinity, OrderKind } from '@/models/GameTypes';
 import type { EventSystem } from './EventSystem';
+import { NpcId } from '@/models/GameTypes';
 
 export interface OrderGeneratorConfig {
   baseOrdersPerHour: number;
@@ -65,6 +66,144 @@ export class OrderGenerator {
     for (let i = 0; i < initialCount; i++) {
       this.generateOrder();
     }
+    
+    // Generate initial NPC orders
+    this.generateNPCOrders();
+  }
+
+  /**
+   * Generate NPC-specific orders that reward memories
+   */
+  private generateNPCOrders(): void {
+    const npcs: NpcId[] = ['aria', 'kai', 'elias'];
+    
+    npcs.forEach(npcId => {
+      // Generate an NPC order with 30% chance
+      if (Math.random() < 0.3) {
+        this.generateNPCOrder(npcId);
+      }
+    });
+  }
+
+  /**
+   * Generate a specific NPC order
+   */
+  private generateNPCOrder(npcId: NpcId): void {
+    if (this.activeOrders.length >= this.config.maxActiveOrders) {
+      return;
+    }
+
+    const now = Date.now();
+    const baseExpiryTime = 4 * 60 * 60 * 1000; // 4 hours
+    const expiryVariance = (Math.random() - 0.5) * 2 * 60 * 60 * 1000; // ±2 hours
+    
+    const complexity = this.determineNPCOrderComplexity(npcId);
+    const requirements = this.generateNPCRequirements(npcId, complexity);
+    const rewards = this.calculateNPCRewards(npcId, complexity, requirements);
+
+    const order: OrderBase & { npcId: NpcId } = {
+      orderId: `npc_${npcId}_${this.orderIdCounter++}`,
+      kind: 'NPC' as OrderKind,
+      createdAt: now,
+      expiresAt: now + baseExpiryTime + expiryVariance,
+      requirements,
+      rewards,
+      status: 'available',
+      customerType: this.getNPCDisplayName(npcId),
+      urgency: this.determineUrgency(expiryVariance),
+      npcId // Add NPC ID for memory generation
+    };
+
+    this.activeOrders.push(order);
+    this.eventSystem.emit('order:generated', { order });
+    
+    console.log(`💝 ${this.getNPCDisplayName(npcId)} placed a special order!`);
+  }
+
+  /**
+   * Determine complexity for NPC orders (generally higher than regular orders)
+   */
+  private determineNPCOrderComplexity(_npcId: NpcId): number {
+    // NPC orders are generally more complex and rewarding
+    const weights = [10, 30, 40, 15, 5]; // Favor medium-high complexity
+    const random = Math.random() * 100;
+    
+    let cumulative = 0;
+    for (let i = 0; i < weights.length; i++) {
+      cumulative += weights[i]!;
+      if (random <= cumulative) {
+        return i + 1;
+      }
+    }
+    return 3; // Default to medium complexity
+  }
+
+  /**
+   * Generate requirements based on NPC preferences
+   */
+  private generateNPCRequirements(npcId: NpcId, complexity: number): { slots: Array<{ affinity: Affinity; minLevel?: number }> } {
+    const npcPreferences = this.getNPCPreferences(npcId);
+    const slotCount = Math.min(complexity + 1, 5); // NPC orders can be more complex
+    
+    const slots = [];
+    for (let i = 0; i < slotCount; i++) {
+      const affinity = npcPreferences[Math.floor(Math.random() * npcPreferences.length)]!;
+      slots.push({
+        affinity,
+        minLevel: complexity >= 3 ? 2 : 1
+      });
+    }
+    
+    return { slots };
+  }
+
+  /**
+   * Calculate rewards for NPC orders (includes memory generation)
+   */
+  private calculateNPCRewards(_npcId: NpcId, complexity: number, requirements: { slots: Array<{ affinity: Affinity; minLevel?: number }> }): { coins: number; diamonds?: number; memory?: boolean } {
+    const baseCoins = 50; // Higher base than regular orders
+    const complexityBonus = complexity * 25;
+    const slotBonus = requirements.slots.length * 15;
+    
+    const totalCoins = Math.floor(baseCoins + complexityBonus + slotBonus);
+    
+    const rewards: { coins: number; diamonds?: number; memory?: boolean } = { 
+      coins: totalCoins,
+      memory: true // NPC orders always generate memories
+    };
+    
+    // Higher chance for diamonds on NPC orders
+    if (complexity >= 3 && Math.random() < 0.6) {
+      rewards.diamonds = Math.floor(complexity * 3 + Math.random() * 8);
+    }
+    
+    return rewards;
+  }
+
+  /**
+   * Get NPC preferences for order generation
+   */
+  private getNPCPreferences(npcId: NpcId): Affinity[] {
+    const preferences: Record<NpcId, Affinity[]> = {
+      aria: ['Sweet', 'Floral', 'Fruity'],
+      kai: ['Bitter', 'Earthy', 'Complex'],
+      elias: ['Spicy', 'Bold', 'Exotic']
+    };
+    
+    return preferences[npcId] || ['Sweet', 'Bitter'];
+  }
+
+  /**
+   * Get display name for NPC
+   */
+  private getNPCDisplayName(npcId: NpcId): string {
+    const names: Record<NpcId, string> = {
+      aria: 'Aria',
+      kai: 'Kai', 
+      elias: 'Elias'
+    };
+    
+    return names[npcId] || npcId;
   }
 
   /**

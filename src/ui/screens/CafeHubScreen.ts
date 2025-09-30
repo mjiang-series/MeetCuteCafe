@@ -157,7 +157,8 @@ export class CafeHubScreen extends BaseScreen {
     const uiElements = [
       { id: 'orders', icon: 'assignment', label: 'Orders', navigate: 'orders', yOffset: 1 },
       { id: 'flavors', icon: 'science', label: 'Flavors', navigate: 'flavor-collection', yOffset: 3 },
-      { id: 'memories', icon: 'favorite', label: 'Memories', navigate: 'journal', yOffset: 5 }
+      { id: 'memories', icon: 'favorite', label: 'Memories', navigate: 'journal', yOffset: 5 },
+      { id: 'dm', icon: 'chat', label: 'DMs', navigate: 'dm', yOffset: 7 }
     ];
 
     return uiElements.map(element => `

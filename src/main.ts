@@ -7,11 +7,16 @@ import { GameStateManager } from '@/systems/GameStateManager';
 import { AssetManager } from '@/systems/AssetManager';
 import { OrderGenerator } from '@/systems/OrderGenerator';
 import { NPCManager } from '@/systems/NPCManager';
+import { MemoryGenerator } from '@/systems/MemoryGenerator';
+import { ConversationManager } from '@/systems/ConversationManager';
 import { ScreenManager } from '@/ui/ScreenManager';
 import { PersistentHeader } from '@/ui/PersistentHeader';
 import { CafeHubScreen } from '@/ui/screens/CafeHubScreen';
 import { OrdersScreen } from '@/ui/screens/OrdersScreen';
 import { FlavorCollectionScreen } from '@/ui/screens/FlavorCollectionScreen';
+import { JournalScreen } from '@/ui/screens/JournalScreen';
+import { MemoryDetailScreen } from '@/ui/screens/MemoryDetailScreen';
+import { DMScreen } from '@/ui/screens/DMScreen';
 
 // Import styles
 import '@/styles/screens.css';
@@ -22,6 +27,8 @@ class MeetCuteCafeGame {
   private assetManager: AssetManager;
   private orderGenerator: OrderGenerator;
   private npcManager: NPCManager;
+  private memoryGenerator: MemoryGenerator;
+  private conversationManager: ConversationManager;
   private screenManager: ScreenManager;
   private persistentHeader: PersistentHeader;
 
@@ -31,6 +38,8 @@ class MeetCuteCafeGame {
     this.assetManager = new AssetManager(this.eventSystem);
     this.orderGenerator = new OrderGenerator(this.eventSystem);
     this.npcManager = new NPCManager(this.eventSystem, this.gameStateManager);
+    this.memoryGenerator = new MemoryGenerator(this.eventSystem, this.gameStateManager, this.npcManager);
+    this.conversationManager = new ConversationManager(this.eventSystem, this.gameStateManager, this.npcManager);
     // ScreenManager and PersistentHeader will be initialized after UI setup
     this.screenManager = null as any; // Temporary
     this.persistentHeader = null as any; // Temporary
@@ -75,9 +84,13 @@ class MeetCuteCafeGame {
       this.orderGenerator.start();
       console.log('✅ Order generation started');
 
-      // Load NPC data from game state
-      this.npcManager.loadFromGameState();
-      console.log('✅ NPC Manager initialized');
+    // Load NPC data from game state
+    this.npcManager.loadFromGameState();
+    console.log('✅ NPC Manager initialized');
+
+    // Load conversation data
+    this.conversationManager.loadConversations();
+    console.log('✅ Conversation Manager initialized');
 
       // Ensure persistent header is visible and set to cafe-hub variant
       this.eventSystem.emit('header:set_variant', { variant: 'cafe-hub' });
@@ -91,6 +104,9 @@ class MeetCuteCafeGame {
       // Start with café hub
       this.screenManager.navigateTo('cafe-hub');
 
+      // Make game systems available globally for screens
+      (window as any).game = this;
+      
       console.log('🎉 Meet Cute Cafe ready!');
 
     } catch (error) {
@@ -153,10 +169,16 @@ class MeetCuteCafeGame {
     const cafeHubScreen = new CafeHubScreen(this.eventSystem, this.gameStateManager, this.assetManager);
     const ordersScreen = new OrdersScreen(this.eventSystem, this.gameStateManager, this.assetManager, this.orderGenerator);
     const flavorCollectionScreen = new FlavorCollectionScreen(this.eventSystem, this.gameStateManager, this.assetManager);
+    const journalScreen = new JournalScreen(this.eventSystem, this.gameStateManager);
+    const memoryDetailScreen = new MemoryDetailScreen(this.eventSystem, this.gameStateManager);
+    const dmScreen = new DMScreen(this.eventSystem, this.gameStateManager);
 
     this.screenManager.registerScreen(cafeHubScreen);
     this.screenManager.registerScreen(ordersScreen);
     this.screenManager.registerScreen(flavorCollectionScreen);
+    this.screenManager.registerScreen(journalScreen);
+    this.screenManager.registerScreen(memoryDetailScreen);
+    this.screenManager.registerScreen(dmScreen);
   }
 
 
@@ -169,6 +191,8 @@ class MeetCuteCafeGame {
     assetManager: AssetManager;
     orderGenerator: OrderGenerator;
     npcManager: NPCManager;
+    memoryGenerator: MemoryGenerator;
+    conversationManager: ConversationManager;
     screenManager: ScreenManager;
     persistentHeader: PersistentHeader;
   } {
@@ -178,6 +202,8 @@ class MeetCuteCafeGame {
       assetManager: this.assetManager,
       orderGenerator: this.orderGenerator,
       npcManager: this.npcManager,
+      memoryGenerator: this.memoryGenerator,
+      conversationManager: this.conversationManager,
       screenManager: this.screenManager,
       persistentHeader: this.persistentHeader,
     };

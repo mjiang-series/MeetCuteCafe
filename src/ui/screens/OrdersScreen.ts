@@ -268,6 +268,12 @@ export class OrdersScreen extends BaseScreen {
       Bitter: '☕',
       Spicy: '🌶️',
       Fresh: '🍃',
+      Floral: '🌸',
+      Fruity: '🍓',
+      Earthy: '🌰',
+      Complex: '🎭',
+      Bold: '⚡',
+      Exotic: '🌺'
     };
     return emojiMap[affinity] || '❓';
   }

@@ -11,6 +11,8 @@ export type ScreenId =
   | 'orders'
   | 'flavor-collection'
   | 'journal'
+  | 'memory-detail'
+  | 'dm'
   | 'settings';
 
 export interface ScreenData {

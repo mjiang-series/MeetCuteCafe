@@ -6,6 +6,7 @@
 import { EventSystem } from './EventSystem';
 import { GameStateManager } from './GameStateManager';
 import { NpcId } from '@/models/GameTypes';
+import { getNpcPortraitPath } from '@/utils/AssetPaths';
 
 export interface NPCData {
   id: NpcId;
@@ -58,7 +59,7 @@ export class NPCManager {
       {
         id: 'aria',
         name: 'Aria',
-        portraitPath: 'art/npc/aria/aria_portrait.png',
+        portraitPath: getNpcPortraitPath('aria'),
         cinematicPath: 'art/npc/aria/aria_gacha_cinematic.mp4',
         personality: {
           traits: ['Sweet', 'Caring', 'Optimistic', 'Creative'],
@@ -77,7 +78,7 @@ export class NPCManager {
       {
         id: 'kai',
         name: 'Kai',
-        portraitPath: 'art/npc/kai/kai_portrait.png',
+        portraitPath: getNpcPortraitPath('kai'),
         cinematicPath: 'art/npc/kai/kai_gacha_cinematic.mp4',
         personality: {
           traits: ['Intellectual', 'Calm', 'Thoughtful', 'Reliable'],
@@ -96,7 +97,7 @@ export class NPCManager {
       {
         id: 'elias',
         name: 'Elias',
-        portraitPath: 'art/npc/elias/elias_portrait.png',
+        portraitPath: getNpcPortraitPath('elias'),
         cinematicPath: 'art/npc/elias/elias_gacha_cinematic.mp4',
         personality: {
           traits: ['Adventurous', 'Energetic', 'Bold', 'Spontaneous'],
