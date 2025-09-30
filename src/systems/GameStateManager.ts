@@ -59,6 +59,8 @@ export class GameStateManager {
         { flavorId: 'starter_bitter', level: 1, acquiredAt: now },
         { flavorId: 'starter_spicy', level: 1, acquiredAt: now },
         { flavorId: 'starter_fresh', level: 1, acquiredAt: now },
+        // 5★ flavor for testing
+        { flavorId: 'sweet_ambrosia', level: 1, acquiredAt: now },
       ],
       journal: {
         entries: [],

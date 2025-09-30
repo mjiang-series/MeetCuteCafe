@@ -21,6 +21,9 @@ interface FlavorDef {
   rarity: Rarity;
   basePower: number;
   description: string;
+  npcId: NpcId; // Primary NPC for this story moment
+  storyTagline: string; // Reader-insert story tagline
+  previewAsset?: string; // Preview image/video path
 }
 
 export class GachaSystem {
@@ -38,52 +41,84 @@ export class GachaSystem {
 
   /**
    * Initialize the complete flavor pool for gacha
+   * Flavors are NPC-centric story moments with taste profiles
    */
   private initializeFlavorPool(): void {
+    // Helper to distribute NPCs across flavors and get correct preview asset
+    const npcs: NpcId[] = ['aria', 'kai', 'elias'];
+    let npcIndex = 0;
+    const getNpc = () => {
+      const npc = npcs[npcIndex % npcs.length];
+      npcIndex++;
+      return npc;
+    };
+    const getPreviewAsset = (npcId: NpcId, rarity: Rarity) => {
+      if (rarity === '5★') {
+        return `/art/npc/${npcId}/${npcId}_flavor_preview_5star.mp4`;
+      }
+      return `/art/npc/${npcId}/${npcId}_flavor_preview_placeholder.png`;
+    };
+
+    // Create flavors with proper NPC distribution and preview assets
+    const createFlavor = (flavorId: string, name: string, affinity: Affinity, rarity: Rarity, basePower: number, description: string, storyTagline: string): FlavorDef => {
+      const npcId = getNpc();
+      return {
+        flavorId,
+        name,
+        affinity,
+        rarity,
+        basePower,
+        description,
+        npcId,
+        storyTagline,
+        previewAsset: getPreviewAsset(npcId, rarity)
+      };
+    };
+
     this.flavorPool = [
-      // 3★ Flavors (70% rate)
-      { flavorId: 'sweet_vanilla', name: 'Vanilla Delight', affinity: 'Sweet', rarity: '3★', basePower: 10, description: 'A classic sweet flavor that never goes out of style.' },
-      { flavorId: 'sweet_honey', name: 'Golden Honey', affinity: 'Sweet', rarity: '3★', basePower: 12, description: 'Pure sweetness from nature\'s bounty.' },
-      { flavorId: 'sweet_caramel', name: 'Buttery Caramel', affinity: 'Sweet', rarity: '3★', basePower: 11, description: 'Rich and creamy caramel goodness.' },
+      // 3★ Flavors (70% rate) - Common story moments
+      createFlavor('sweet_vanilla', 'Vanilla Delight', 'Sweet', '3★', 10, 'A classic sweet flavor that never goes out of style.', 'A sweet afternoon sharing desserts at the cafe'),
+      createFlavor('sweet_honey', 'Golden Honey', 'Sweet', '3★', 12, 'Pure sweetness from nature\'s bounty.', 'Discovering honey tea together on a quiet morning'),
+      createFlavor('sweet_caramel', 'Buttery Caramel', 'Sweet', '3★', 11, 'Rich and creamy caramel goodness.', 'Laughing over spilled caramel sauce'),
       
-      { flavorId: 'salty_caramel', name: 'Salted Caramel', affinity: 'Salty', rarity: '3★', basePower: 10, description: 'The perfect balance of sweet and salty.' },
-      { flavorId: 'salty_pretzel', name: 'Crunchy Pretzel', affinity: 'Salty', rarity: '3★', basePower: 11, description: 'Satisfying crunch with a salty finish.' },
-      { flavorId: 'salty_cheese', name: 'Sharp Cheddar', affinity: 'Salty', rarity: '3★', basePower: 12, description: 'Bold and tangy cheese flavor.' },
+      createFlavor('salty_caramel', 'Salted Caramel', 'Salty', '3★', 10, 'The perfect balance of sweet and salty.', 'Finding the perfect sweet-salty balance together'),
+      createFlavor('salty_pretzel', 'Crunchy Pretzel', 'Salty', '3★', 11, 'Satisfying crunch with a salty finish.', 'Sharing pretzels while people-watching'),
+      createFlavor('salty_cheese', 'Sharp Cheddar', 'Salty', '3★', 12, 'Bold and tangy cheese flavor.', 'A heated debate over the best cheese'),
       
-      { flavorId: 'bitter_coffee', name: 'Dark Roast', affinity: 'Bitter', rarity: '3★', basePower: 10, description: 'Bold coffee with a bitter edge.' },
-      { flavorId: 'bitter_cocoa', name: 'Pure Cocoa', affinity: 'Bitter', rarity: '3★', basePower: 11, description: 'Unsweetened chocolate intensity.' },
-      { flavorId: 'bitter_tea', name: 'Earl Grey', affinity: 'Bitter', rarity: '3★', basePower: 12, description: 'Sophisticated tea with bergamot notes.' },
+      createFlavor('bitter_coffee', 'Dark Roast', 'Bitter', '3★', 10, 'Bold coffee with a bitter edge.', 'Late night conversations over bitter coffee'),
+      createFlavor('bitter_cocoa', 'Pure Cocoa', 'Bitter', '3★', 11, 'Unsweetened chocolate intensity.', 'The bittersweet taste of honesty'),
+      createFlavor('bitter_tea', 'Earl Grey', 'Bitter', '3★', 12, 'Sophisticated tea with bergamot notes.', 'Afternoon tea and difficult truths'),
       
-      { flavorId: 'spicy_cinnamon', name: 'Warm Cinnamon', affinity: 'Spicy', rarity: '3★', basePower: 10, description: 'Comforting warmth with a spicy kick.' },
-      { flavorId: 'spicy_chili', name: 'Red Chili', affinity: 'Spicy', rarity: '3★', basePower: 11, description: 'Fiery heat that builds slowly.' },
-      { flavorId: 'spicy_ginger', name: 'Fresh Ginger', affinity: 'Spicy', rarity: '3★', basePower: 12, description: 'Zesty ginger with a warming bite.' },
+      createFlavor('spicy_cinnamon', 'Warm Cinnamon', 'Spicy', '3★', 10, 'Comforting warmth with a spicy kick.', 'Warming up together on a cold day'),
+      createFlavor('spicy_chili', 'Red Chili', 'Spicy', '3★', 11, 'Fiery heat that builds slowly.', 'A spicy challenge turns into something more'),
+      createFlavor('spicy_ginger', 'Fresh Ginger', 'Spicy', '3★', 12, 'Zesty ginger with a warming bite.', 'Their presence makes your heart race'),
       
-      { flavorId: 'fresh_mint', name: 'Cool Mint', affinity: 'Fresh', rarity: '3★', basePower: 10, description: 'Refreshing mint that awakens the senses.' },
-      { flavorId: 'fresh_lemon', name: 'Zesty Lemon', affinity: 'Fresh', rarity: '3★', basePower: 11, description: 'Bright citrus burst of freshness.' },
-      { flavorId: 'fresh_cucumber', name: 'Garden Cucumber', affinity: 'Fresh', rarity: '3★', basePower: 12, description: 'Clean and crisp vegetable freshness.' },
+      createFlavor('fresh_mint', 'Cool Mint', 'Fresh', '3★', 10, 'Refreshing mint that awakens the senses.', 'A refreshing start to something new'),
+      createFlavor('fresh_lemon', 'Zesty Lemon', 'Fresh', '3★', 11, 'Bright citrus burst of freshness.', 'Bright laughter on a sunny day'),
+      createFlavor('fresh_cucumber', 'Garden Cucumber', 'Fresh', '3★', 12, 'Clean and crisp vegetable freshness.', 'Finding peace in the garden together'),
 
-      // 4★ Flavors (27% rate)
-      { flavorId: 'sweet_truffle', name: 'Chocolate Truffle', affinity: 'Sweet', rarity: '4★', basePower: 20, description: 'Luxurious chocolate with velvety texture.' },
-      { flavorId: 'sweet_rose', name: 'Rose Petal', affinity: 'Sweet', rarity: '4★', basePower: 22, description: 'Delicate floral sweetness with romantic notes.' },
+      // 4★ Flavors (27% rate) - Memorable story moments
+      createFlavor('sweet_truffle', 'Chocolate Truffle', 'Sweet', '4★', 20, 'Luxurious chocolate with velvety texture.', 'An indulgent moment you\'ll never forget'),
+      createFlavor('sweet_rose', 'Rose Petal', 'Sweet', '4★', 22, 'Delicate floral sweetness with romantic notes.', 'When words fail, roses speak'),
       
-      { flavorId: 'salty_ocean', name: 'Sea Salt', affinity: 'Salty', rarity: '4★', basePower: 20, description: 'Pure ocean minerals with complex depth.' },
-      { flavorId: 'salty_bacon', name: 'Smoky Bacon', affinity: 'Salty', rarity: '4★', basePower: 22, description: 'Rich umami with smoky undertones.' },
+      createFlavor('salty_ocean', 'Sea Salt', 'Salty', '4★', 20, 'Pure ocean minerals with complex depth.', 'The taste of tears and truth by the sea'),
+      createFlavor('salty_bacon', 'Smoky Bacon', 'Salty', '4★', 22, 'Rich umami with smoky undertones.', 'Sunday breakfast becomes a tradition'),
       
-      { flavorId: 'bitter_espresso', name: 'Triple Espresso', affinity: 'Bitter', rarity: '4★', basePower: 20, description: 'Intense coffee concentrate with crema.' },
-      { flavorId: 'bitter_dark_chocolate', name: 'Dark Chocolate 85%', affinity: 'Bitter', rarity: '4★', basePower: 22, description: 'Premium dark chocolate with complex notes.' },
+      createFlavor('bitter_espresso', 'Triple Espresso', 'Bitter', '4★', 20, 'Intense coffee concentrate with crema.', 'All-nighter confessions and revelations'),
+      createFlavor('bitter_dark_chocolate', 'Dark Chocolate 85%', 'Bitter', '4★', 22, 'Premium dark chocolate with complex notes.', 'Complex feelings wrapped in darkness'),
       
-      { flavorId: 'spicy_wasabi', name: 'Fresh Wasabi', affinity: 'Spicy', rarity: '4★', basePower: 20, description: 'Sharp heat that clears the mind.' },
-      { flavorId: 'spicy_habanero', name: 'Habanero Fire', affinity: 'Spicy', rarity: '4★', basePower: 22, description: 'Fruity heat with serious intensity.' },
+      createFlavor('spicy_wasabi', 'Fresh Wasabi', 'Spicy', '4★', 20, 'Sharp heat that clears the mind.', 'A sharp moment of clarity changes everything'),
+      createFlavor('spicy_habanero', 'Habanero Fire', 'Spicy', '4★', 22, 'Fruity heat with serious intensity.', 'Passion burns hot and bright'),
       
-      { flavorId: 'fresh_eucalyptus', name: 'Eucalyptus Breeze', affinity: 'Fresh', rarity: '4★', basePower: 20, description: 'Cooling menthol with herbal complexity.' },
-      { flavorId: 'fresh_lime', name: 'Key Lime', affinity: 'Fresh', rarity: '4★', basePower: 22, description: 'Tart citrus with tropical brightness.' },
+      createFlavor('fresh_eucalyptus', 'Eucalyptus Breeze', 'Fresh', '4★', 20, 'Cooling menthol with herbal complexity.', 'A healing moment in the cafe garden'),
+      createFlavor('fresh_lime', 'Key Lime', 'Fresh', '4★', 22, 'Tart citrus with tropical brightness.', 'Tart words hide sweet feelings'),
 
-      // 5★ Flavors (3% rate)
-      { flavorId: 'sweet_ambrosia', name: 'Divine Ambrosia', affinity: 'Sweet', rarity: '5★', basePower: 40, description: 'The legendary flavor of the gods themselves.' },
-      { flavorId: 'salty_umami', name: 'Perfect Umami', affinity: 'Salty', rarity: '5★', basePower: 40, description: 'The fifth taste in its purest form.' },
-      { flavorId: 'bitter_phoenix', name: 'Phoenix Bitter', affinity: 'Bitter', rarity: '5★', basePower: 40, description: 'Reborn from ashes, this bitter transcends mortal taste.' },
-      { flavorId: 'spicy_dragon', name: 'Dragon\'s Breath', affinity: 'Spicy', rarity: '5★', basePower: 40, description: 'Legendary heat that burns with ancient power.' },
-      { flavorId: 'fresh_eternal', name: 'Eternal Spring', affinity: 'Fresh', rarity: '5★', basePower: 40, description: 'Timeless freshness that never fades.' },
+      // 5★ Flavors (3% rate) - Legendary story moments
+      { flavorId: 'sweet_ambrosia', name: 'Divine Ambrosia', affinity: 'Sweet', rarity: '5★', basePower: 40, description: 'The legendary flavor of the gods themselves.', npcId: 'aria', storyTagline: 'The moment everything changes forever', previewAsset: getPreviewAsset('aria', '5★') },
+      { flavorId: 'salty_umami', name: 'Perfect Umami', affinity: 'Salty', rarity: '5★', basePower: 40, description: 'The fifth taste in its purest form.', npcId: 'kai', storyTagline: 'Finding what was always meant to be', previewAsset: getPreviewAsset('kai', '5★') },
+      { flavorId: 'bitter_phoenix', name: 'Phoenix Bitter', affinity: 'Bitter', rarity: '5★', basePower: 40, description: 'Reborn from ashes, this bitter transcends mortal taste.', npcId: 'elias', storyTagline: 'Rising from the ashes together', previewAsset: getPreviewAsset('elias', '5★') },
+      { flavorId: 'spicy_dragon', name: 'Dragon\'s Breath', affinity: 'Spicy', rarity: '5★', basePower: 40, description: 'Legendary heat that burns with ancient power.', npcId: 'aria', storyTagline: 'A love that burns eternal', previewAsset: getPreviewAsset('aria', '5★') },
+      { flavorId: 'fresh_eternal', name: 'Eternal Spring', affinity: 'Fresh', rarity: '5★', basePower: 40, description: 'Timeless freshness that never fades.', npcId: 'kai', storyTagline: 'A promise that transcends time', previewAsset: getPreviewAsset('kai', '5★') },
     ];
   }
 

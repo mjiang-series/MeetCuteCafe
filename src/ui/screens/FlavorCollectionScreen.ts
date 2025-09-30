@@ -52,7 +52,7 @@ export class FlavorCollectionScreen extends BaseScreen {
 
   protected createContent(): string {
     const player = this.gameState.getPlayer();
-    const affinityFilter = 'all'; // TODO: Implement filtering
+    const npcFilter = 'all'; // Filter by NPC
 
     return `
       <div class="flavor-collection-screen">
@@ -60,7 +60,7 @@ export class FlavorCollectionScreen extends BaseScreen {
           <div class="collection-stats">
             <div class="stat-card">
               <div class="stat-value">${player.flavors.length}</div>
-              <div class="stat-label">Flavors Owned</div>
+              <div class="stat-label">Story Moments</div>
             </div>
             <div class="stat-card">
               <div class="stat-value">${this.getAverageLevel()}</div>
@@ -73,15 +73,15 @@ export class FlavorCollectionScreen extends BaseScreen {
           </div>
 
           <div class="affinity-filters">
-            <button class="filter-btn filter-btn--active" data-action="filter-affinity" data-affinity="all">
+            <button class="filter-btn filter-btn--active" data-action="filter-npc" data-npc="all">
               All
             </button>
-            ${this.renderAffinityFilters()}
+            ${this.renderNPCFilters()}
           </div>
         </div>
 
         <div class="collection-grid">
-          ${this.renderFlavorCards(affinityFilter)}
+          ${this.renderFlavorCards(npcFilter)}
         </div>
 
         ${player.flavors.length === 0 ? this.renderEmptyState() : ''}
@@ -105,17 +105,19 @@ export class FlavorCollectionScreen extends BaseScreen {
   /**
    * Render affinity filter buttons
    */
-  private renderAffinityFilters(): string {
-    const affinities: Affinity[] = ['Sweet', 'Salty', 'Bitter', 'Spicy', 'Fresh'];
+  private renderNPCFilters(): string {
+    const npcs: { id: string; name: string; }[] = [
+      { id: 'aria', name: 'Aria' },
+      { id: 'kai', name: 'Kai' },
+      { id: 'elias', name: 'Elias' }
+    ];
     
-    return affinities.map(affinity => {
-      const emoji = this.getAffinityEmoji(affinity);
-      const count = this.getAffinityCount(affinity);
+    return npcs.map(npc => {
+      const count = this.getNPCFlavorCount(npc.id);
       
       return `
-        <button class="filter-btn" data-action="filter-affinity" data-affinity="${affinity}">
-          <span class="filter-emoji">${emoji}</span>
-          <span class="filter-name">${affinity}</span>
+        <button class="filter-btn" data-action="filter-npc" data-npc="${npc.id}">
+          <span class="filter-name">${npc.name}</span>
           <span class="filter-count">(${count})</span>
         </button>
       `;
@@ -125,20 +127,20 @@ export class FlavorCollectionScreen extends BaseScreen {
   /**
    * Render flavor cards
    */
-  private renderFlavorCards(affinityFilter: string): string {
+  private renderFlavorCards(npcFilter: string): string {
     const player = this.gameState.getPlayer();
     let flavors = player.flavors;
 
-    // Apply filter
-    if (affinityFilter !== 'all') {
+    // Apply NPC filter
+    if (npcFilter !== 'all') {
       flavors = flavors.filter(flavor => {
         const flavorData = this.getFlavorData(flavor.flavorId);
-        return flavorData?.affinity === affinityFilter;
+        return flavorData && 'npcId' in flavorData && flavorData.npcId === npcFilter;
       });
     }
 
     if (flavors.length === 0) {
-      return '<div class="no-flavors">No flavors match your filter.</div>';
+      return '<div class="no-flavors">No story moments match your filter.</div>';
     }
 
     return flavors.map(flavor => this.renderFlavorCard(flavor)).join('');
@@ -172,7 +174,8 @@ export class FlavorCollectionScreen extends BaseScreen {
 
         <div class="flavor-info">
           <h3 class="flavor-name">${flavorData.name}</h3>
-          <div class="flavor-affinity">${flavorData.affinity}</div>
+          ${'npcId' in flavorData ? `<div class="flavor-npc">with ${ (flavorData as any).npcId.charAt(0).toUpperCase() + (flavorData as any).npcId.slice(1)}</div>` : ''}
+          ${'storyTagline' in flavorData ? `<div class="flavor-story">${(flavorData as any).storyTagline}</div>` : `<div class="flavor-affinity">${flavorData.affinity}</div>`}
           <div class="flavor-level">Level ${playerFlavor.level}</div>
         </div>
 
@@ -244,6 +247,17 @@ export class FlavorCollectionScreen extends BaseScreen {
     return player.flavors.filter(flavor => {
       const flavorData = this.getFlavorData(flavor.flavorId);
       return flavorData?.affinity === affinity;
+    }).length;
+  }
+
+  /**
+   * Get count of flavors for a specific NPC
+   */
+  private getNPCFlavorCount(npcId: string): number {
+    const player = this.gameState.getPlayer();
+    return player.flavors.filter(flavor => {
+      const flavorData = this.getFlavorData(flavor.flavorId);
+      return flavorData && 'npcId' in flavorData && flavorData.npcId === npcId;
     }).length;
   }
 
@@ -385,9 +399,9 @@ export class FlavorCollectionScreen extends BaseScreen {
    */
   protected override handleAction(action: string, element: HTMLElement): void {
     switch (action) {
-      case 'filter-affinity': {
-        const affinity = element.getAttribute('data-affinity') || 'all';
-        this.applyAffinityFilter(affinity);
+      case 'filter-npc': {
+        const npcId = element.getAttribute('data-npc') || 'all';
+        this.applyNPCFilter(npcId);
         break;
       }
       
@@ -418,14 +432,14 @@ export class FlavorCollectionScreen extends BaseScreen {
   }
 
   /**
-   * Apply affinity filter
+   * Apply NPC filter
    */
-  private applyAffinityFilter(affinity: string): void {
+  private applyNPCFilter(npcId: string): void {
     // Update active filter button
     const filterButtons = this.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
       btn.classList.remove('filter-btn--active');
-      if (btn.getAttribute('data-affinity') === affinity) {
+      if (btn.getAttribute('data-npc') === npcId) {
         btn.classList.add('filter-btn--active');
       }
     });
@@ -433,7 +447,7 @@ export class FlavorCollectionScreen extends BaseScreen {
     // Update grid
     const grid = this.querySelector('.collection-grid');
     if (grid) {
-      grid.innerHTML = this.renderFlavorCards(affinity);
+      grid.innerHTML = this.renderFlavorCards(npcId);
       this.bindEventHandlers();
     }
   }
