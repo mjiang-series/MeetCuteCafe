@@ -9,6 +9,7 @@ export type ScreenId =
   | 'welcome'
   | 'cafe-hub'
   | 'orders'
+  | 'order-results'
   | 'flavor-collection'
   | 'journal'
   | 'memory-detail'

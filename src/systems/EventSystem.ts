@@ -25,6 +25,7 @@ export type EventMap = {
   // Memory events
   'memory:created': { memory: unknown };
   'memory:viewed': { memoryId: string; npcId?: string };
+  'memory:generate_from_order': { npcId: string; orderId: string };
 
   // DM events
   'dm:received': { npcId: string; message: string };

@@ -52,7 +52,14 @@ export class GameStateManager {
         salt: 10,
       },
       tokens: 0,
-      flavors: [], // Will be populated with starter flavors
+      flavors: [
+        // Starter flavors - one of each affinity at level 1
+        { flavorId: 'starter_sweet', level: 1, acquiredAt: now },
+        { flavorId: 'starter_salty', level: 1, acquiredAt: now },
+        { flavorId: 'starter_bitter', level: 1, acquiredAt: now },
+        { flavorId: 'starter_spicy', level: 1, acquiredAt: now },
+        { flavorId: 'starter_fresh', level: 1, acquiredAt: now },
+      ],
       journal: {
         entries: [],
       },

@@ -78,8 +78,8 @@ export class OrderGenerator {
     const npcs: NpcId[] = ['aria', 'kai', 'elias'];
     
     npcs.forEach(npcId => {
-      // Generate an NPC order with 30% chance
-      if (Math.random() < 0.3) {
+      // Generate an NPC order with 100% chance for testing
+      if (Math.random() < 1.0) {
         this.generateNPCOrder(npcId);
       }
     });
@@ -117,7 +117,8 @@ export class OrderGenerator {
     this.activeOrders.push(order);
     this.eventSystem.emit('order:generated', { order });
     
-    console.log(`💝 ${this.getNPCDisplayName(npcId)} placed a special order!`);
+    console.log(`💝 ${this.getNPCDisplayName(npcId)} placed a special order! ID: ${order.orderId}`);
+    console.log(`📊 Total active orders: ${this.activeOrders.length}`);
   }
 
   /**
@@ -185,9 +186,9 @@ export class OrderGenerator {
    */
   private getNPCPreferences(npcId: NpcId): Affinity[] {
     const preferences: Record<NpcId, Affinity[]> = {
-      aria: ['Sweet', 'Floral', 'Fruity'],
-      kai: ['Bitter', 'Earthy', 'Complex'],
-      elias: ['Spicy', 'Bold', 'Exotic']
+      aria: ['Sweet', 'Fresh'],
+      kai: ['Bitter', 'Salty'],
+      elias: ['Spicy', 'Bitter']
     };
     
     return preferences[npcId] || ['Sweet', 'Bitter'];
@@ -342,12 +343,19 @@ export class OrderGenerator {
    * Complete an order
    */
   completeOrder(orderId: string): boolean {
+    console.log(`🎯 OrderGenerator.completeOrder called for: ${orderId}`);
     const orderIndex = this.activeOrders.findIndex(o => o.orderId === orderId);
-    if (orderIndex === -1) return false;
+    if (orderIndex === -1) {
+      console.log(`❌ Order ${orderId} not found in active orders`);
+      console.log(`📋 Available order IDs:`, this.activeOrders.map(o => o.orderId));
+      return false;
+    }
 
     const order = this.activeOrders[orderIndex];
+    console.log(`📦 Completing order:`, order);
     this.activeOrders.splice(orderIndex, 1);
     
+    console.log(`📡 Emitting order:completed event for order ${orderId}`);
     this.eventSystem.emit('order:completed', { order });
     return true;
   }

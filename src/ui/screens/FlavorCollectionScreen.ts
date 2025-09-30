@@ -218,13 +218,7 @@ export class FlavorCollectionScreen extends BaseScreen {
       Salty: '🧂',
       Bitter: '☕',
       Spicy: '🌶️',
-      Fresh: '🍃',
-      Floral: '🌸',
-      Fruity: '🍓',
-      Earthy: '🌰',
-      Complex: '🎭',
-      Bold: '⚡',
-      Exotic: '🌺'
+      Fresh: '🍃'
     };
     return emojiMap[affinity] || '❓';
   }

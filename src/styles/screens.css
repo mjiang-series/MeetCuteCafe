@@ -1192,3 +1192,32 @@
     font-size: 0.8rem;
   }
 }
+
+/* Order completion button styles */
+.order-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-complete {
+  background: #8e44ad;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-complete:hover {
+  background: #7d3c98;
+  transform: translateY(-1px);
+}
+
+.btn-complete:active {
+  transform: translateY(0);
+}

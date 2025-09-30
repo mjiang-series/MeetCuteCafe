@@ -17,6 +17,7 @@ import { FlavorCollectionScreen } from '@/ui/screens/FlavorCollectionScreen';
 import { JournalScreen } from '@/ui/screens/JournalScreen';
 import { MemoryDetailScreen } from '@/ui/screens/MemoryDetailScreen';
 import { DMScreen } from '@/ui/screens/DMScreen';
+import { OrderResultsScreen } from '@/ui/screens/OrderResultsScreen';
 
 // Import styles
 import '@/styles/screens.css';
@@ -92,6 +93,10 @@ class MeetCuteCafeGame {
     this.conversationManager.loadConversations();
     console.log('✅ Conversation Manager initialized');
 
+    // Start order generation
+    this.orderGenerator.start();
+    console.log('✅ Order Generator started');
+
       // Ensure persistent header is visible and set to cafe-hub variant
       this.eventSystem.emit('header:set_variant', { variant: 'cafe-hub' });
       
@@ -133,6 +138,60 @@ class MeetCuteCafeGame {
     this.eventSystem.on('game:saved', (data) => {
       console.log(`Game saved at ${new Date(data.timestamp).toLocaleTimeString()}`);
     });
+
+    // Handle order completion by showing results screen
+    this.eventSystem.on('order:completed', (data) => {
+      const order = data.order as any;
+      this.showOrderResults(order);
+    });
+  }
+
+  private showOrderResults(order: any): void {
+    console.log('📋 Showing order results for:', order);
+    
+    // Prepare results data
+    const resultsData: any = {
+      orderId: order.orderId,
+      rewards: order.rewards,
+      npcId: order.npcId,
+      orderType: order.kind,
+      customerType: order.customerType
+    };
+
+    // Generate memory for NPC orders
+    if (order.kind === 'NPC' && order.npcId && order.rewards.memory) {
+      console.log('🧠 NPC order detected, generating memory...');
+      // Request memory generation
+      this.eventSystem.emit('memory:generate_from_order', {
+        npcId: order.npcId,
+        orderId: order.orderId
+      });
+
+      // Listen for the memory creation to get the memory ID (once)
+      this.eventSystem.once('memory:created', (memoryData: any) => {
+        console.log('💕 Memory created event received:', memoryData);
+        const memory = memoryData.memory as any;
+        console.log('🔍 Memory orderId:', memory?.orderId, 'vs Order orderId:', order.orderId);
+        
+        // Always set the memory ID if we have a memory
+        if (memory) {
+          resultsData.memoryId = memory.id;
+          if (memory.orderId === order.orderId) {
+            console.log('✅ Memory matches order, navigating to results screen');
+          } else {
+            console.log('⚠️ Memory does not match order, but including it anyway');
+            console.log('⚠️ Memory object:', memory);
+            console.log('⚠️ Expected orderId:', order.orderId);
+          }
+        }
+        
+        this.screenManager.navigateTo('order-results', resultsData as any);
+      });
+    } else {
+      console.log('📄 Regular order or no memory, showing results immediately');
+      // No memory, show results immediately
+      this.screenManager.navigateTo('order-results', resultsData as any);
+    }
   }
 
   private initializeUI(): void {
@@ -172,6 +231,7 @@ class MeetCuteCafeGame {
     const journalScreen = new JournalScreen(this.eventSystem, this.gameStateManager);
     const memoryDetailScreen = new MemoryDetailScreen(this.eventSystem, this.gameStateManager);
     const dmScreen = new DMScreen(this.eventSystem, this.gameStateManager);
+    const orderResultsScreen = new OrderResultsScreen(this.eventSystem, this.gameStateManager);
 
     this.screenManager.registerScreen(cafeHubScreen);
     this.screenManager.registerScreen(ordersScreen);
@@ -179,6 +239,7 @@ class MeetCuteCafeGame {
     this.screenManager.registerScreen(journalScreen);
     this.screenManager.registerScreen(memoryDetailScreen);
     this.screenManager.registerScreen(dmScreen);
+    this.screenManager.registerScreen(orderResultsScreen);
   }
 
 

@@ -135,12 +135,11 @@ export class MemoryGenerator {
    * Setup event listeners for memory generation triggers
    */
   private setupEventListeners(): void {
-    // Generate memories when NPC orders are completed
-    this.eventSystem.on('order:completed', (data) => {
-      const order = data.order as any;
-      if (order?.kind === 'NPC' && order.npcId) {
-        this.generateOrderMemory(order.npcId, order.orderId);
-      }
+    // Generate memories when explicitly requested (from Order Results screen)
+    this.eventSystem.on('memory:generate_from_order', (data) => {
+      console.log('🧠 Memory generation requested:', data);
+      const { npcId, orderId } = data as { npcId: NpcId; orderId: string };
+      this.generateOrderMemory(npcId, orderId);
     });
 
     // Generate memories from bond level ups
@@ -183,6 +182,7 @@ export class MemoryGenerator {
     };
 
     this.saveMemory(memory);
+    console.log(`💕 Order memory created for ${npcId}: "${content.substring(0, 50)}..."`);
     this.eventSystem.emit('memory:created', { memory });
     
     console.log(`📖 New memory created: "${content.substring(0, 50)}..."`);
