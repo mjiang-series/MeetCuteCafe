@@ -11,6 +11,7 @@ export type ScreenId =
   | 'orders'
   | 'order-results'
   | 'flavor-collection'
+  | 'gacha'
   | 'journal'
   | 'memory-detail'
   | 'dm'

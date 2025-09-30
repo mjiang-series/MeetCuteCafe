@@ -8,13 +8,13 @@ import type { GameStateManager } from '@/systems/GameStateManager';
 import type { Player } from '@/models/GameTypes';
 import { getPlayerPortraitPath, getLogoPath } from '@/utils/AssetPaths';
 
-export type HeaderVariant = 'welcome' | 'cafe-hub' | 'orders' | 'flavor-collection' | 'journal' | 'conversation-history' | 'dm' | 'settings' | 'results';
+export type HeaderVariant = 'welcome' | 'cafe-hub' | 'orders' | 'flavor-collection' | 'gacha' | 'journal' | 'conversation-history' | 'dm' | 'settings' | 'results';
 
 export interface HeaderConfig {
   showCurrencies: boolean;
   showBackButton: boolean;
   title?: string;
-  currencies?: ('coins' | 'diamonds')[];
+  currencies?: ('coins' | 'diamonds' | 'tickets')[];
 }
 
 const HEADER_CONFIGS: Record<HeaderVariant, HeaderConfig> = {
@@ -38,6 +38,12 @@ const HEADER_CONFIGS: Record<HeaderVariant, HeaderConfig> = {
     showBackButton: true,
     title: 'Flavor Collection',
     currencies: ['coins'],
+  },
+  gacha: {
+    showCurrencies: true,
+    showBackButton: true,
+    title: 'Gacha',
+    currencies: ['tickets', 'diamonds'],
   },
   journal: {
     showCurrencies: false,
@@ -272,6 +278,8 @@ export class PersistentHeader {
         return this.player.coins;
       case 'diamonds':
         return this.player.diamonds;
+      case 'tickets':
+        return this.player.tokens;
       default:
         return 0;
     }
@@ -286,6 +294,8 @@ export class PersistentHeader {
         return '🪙';
       case 'diamonds':
         return '💎';
+      case 'tickets':
+        return '🎫';
       default:
         return '❓';
     }

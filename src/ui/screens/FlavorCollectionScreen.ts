@@ -6,6 +6,7 @@ import { BaseScreen } from '../BaseScreen';
 import type { EventSystem } from '@/systems/EventSystem';
 import type { GameStateManager } from '@/systems/GameStateManager';
 import type { AssetManager } from '@/systems/AssetManager';
+import type { GachaSystem } from '@/systems/GachaSystem';
 import type { ScreenData } from '../ScreenManager';
 import type { PlayerFlavor, Affinity, Rarity } from '@/models/GameTypes';
 
@@ -20,6 +21,7 @@ interface FlavorData {
 
 export class FlavorCollectionScreen extends BaseScreen {
   private _flavorDatabase: FlavorData[] | null = null;
+  private gachaSystem: GachaSystem | null = null;
 
   constructor(
     eventSystem: EventSystem,
@@ -32,7 +34,18 @@ export class FlavorCollectionScreen extends BaseScreen {
 
   private get flavorDatabase(): FlavorData[] {
     if (!this._flavorDatabase) {
-      this._flavorDatabase = this.createFlavorDatabase();
+      // Get gacha system from global game object
+      if (!this.gachaSystem && (window as any).game) {
+        this.gachaSystem = (window as any).game.getSystems().gachaSystem;
+      }
+      
+      if (this.gachaSystem) {
+        // Use gacha system's flavor database
+        this._flavorDatabase = this.gachaSystem.getAllFlavorDefs();
+      } else {
+        // Fallback to local database
+        this._flavorDatabase = this.createFlavorDatabase();
+      }
     }
     return this._flavorDatabase;
   }

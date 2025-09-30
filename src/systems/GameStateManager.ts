@@ -44,6 +44,7 @@ export class GameStateManager {
       lastSeenAt: now,
       coins: 100, // Starting coins
       diamonds: 50, // Starting diamonds
+      tokens: 5, // Starting tickets for gacha
       consumables: {
         sugar: 10,
         coffee: 10,
@@ -51,7 +52,6 @@ export class GameStateManager {
         pepper: 10,
         salt: 10,
       },
-      tokens: 0,
       flavors: [
         // Starter flavors - one of each affinity at level 1
         { flavorId: 'starter_sweet', level: 1, acquiredAt: now },
@@ -236,6 +236,28 @@ export class GameStateManager {
     this.eventSystem.emit('header:update_currency', { currency: 'diamonds', value: this.player.diamonds });
     this.saveGame();
     return true;
+  }
+
+  /**
+   * Add currency to player (generic method)
+   */
+  addCurrency(type: 'coins' | 'diamonds' | 'tokens', amount: number): void {
+    if (!this.player) return;
+    
+    switch (type) {
+      case 'coins':
+        this.player.coins += amount;
+        break;
+      case 'diamonds':
+        this.player.diamonds += amount;
+        break;
+      case 'tokens':
+        this.player.tokens += amount;
+        break;
+    }
+    
+    this.eventSystem.emit('header:update_currency', { currency: type, value: this.player[type] });
+    this.saveGame();
   }
 
   /**

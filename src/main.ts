@@ -13,6 +13,7 @@ import { OrderGenerator } from '@/systems/OrderGenerator';
 import { NPCManager } from '@/systems/NPCManager';
 import { MemoryGenerator } from '@/systems/MemoryGenerator';
 import { ConversationManager } from '@/systems/ConversationManager';
+import { GachaSystem } from '@/systems/GachaSystem';
 import { ScreenManager } from '@/ui/ScreenManager';
 import { PersistentHeader } from '@/ui/PersistentHeader';
 import { CafeHubScreen } from '@/ui/screens/CafeHubScreen';
@@ -23,6 +24,7 @@ import { MemoryDetailScreen } from '@/ui/screens/MemoryDetailScreen';
 import { DMScreen } from '@/ui/screens/DMScreen';
 import { ConversationHistoryScreen } from '@/ui/screens/ConversationHistoryScreen';
 import { OrderResultsScreen } from '@/ui/screens/OrderResultsScreen';
+import { GachaScreen } from '@/ui/screens/GachaScreen';
 
 // Import styles
 import '@/styles/screens.css';
@@ -35,6 +37,7 @@ class MeetCuteCafeGame {
   private npcManager: NPCManager;
   private memoryGenerator: MemoryGenerator;
   private conversationManager: ConversationManager;
+  private gachaSystem: GachaSystem;
   private screenManager: ScreenManager;
   private persistentHeader: PersistentHeader;
 
@@ -46,6 +49,7 @@ class MeetCuteCafeGame {
     this.npcManager = new NPCManager(this.eventSystem, this.gameStateManager);
     this.memoryGenerator = new MemoryGenerator(this.eventSystem, this.gameStateManager, this.npcManager);
     this.conversationManager = new ConversationManager(this.eventSystem, this.gameStateManager, this.npcManager);
+    this.gachaSystem = new GachaSystem(this.eventSystem, this.gameStateManager);
     // ScreenManager and PersistentHeader will be initialized after UI setup
     this.screenManager = null as any; // Temporary
     this.persistentHeader = null as any; // Temporary
@@ -238,6 +242,7 @@ class MeetCuteCafeGame {
     const dmScreen = new DMScreen(this.eventSystem, this.gameStateManager);
     const conversationHistoryScreen = new ConversationHistoryScreen(this.eventSystem, this.gameStateManager);
     const orderResultsScreen = new OrderResultsScreen(this.eventSystem, this.gameStateManager);
+    const gachaScreen = new GachaScreen(this.eventSystem, this.gameStateManager, this.assetManager, this.gachaSystem);
 
     this.screenManager.registerScreen(cafeHubScreen);
     this.screenManager.registerScreen(ordersScreen);
@@ -247,6 +252,7 @@ class MeetCuteCafeGame {
     this.screenManager.registerScreen(dmScreen);
     this.screenManager.registerScreen(conversationHistoryScreen);
     this.screenManager.registerScreen(orderResultsScreen);
+    this.screenManager.registerScreen(gachaScreen);
   }
 
 
@@ -261,6 +267,7 @@ class MeetCuteCafeGame {
     npcManager: NPCManager;
     memoryGenerator: MemoryGenerator;
     conversationManager: ConversationManager;
+    gachaSystem: GachaSystem;
     screenManager: ScreenManager;
     persistentHeader: PersistentHeader;
   } {
@@ -272,6 +279,7 @@ class MeetCuteCafeGame {
       npcManager: this.npcManager,
       memoryGenerator: this.memoryGenerator,
       conversationManager: this.conversationManager,
+      gachaSystem: this.gachaSystem,
       screenManager: this.screenManager,
       persistentHeader: this.persistentHeader,
     };
