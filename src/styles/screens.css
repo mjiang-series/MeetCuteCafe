@@ -6,12 +6,14 @@
 /* Base screen styles - Mobile First */
 .screen {
   width: 100%;
-  min-height: calc(100vh - var(--header-height));
+  height: calc(100vh - var(--header-height));
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* Smooth iOS scrolling */
   box-sizing: border-box;
   
   /* Mobile spacing */
   padding: var(--space-lg);
-  padding-top: var(--space-lg);
   padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom) + var(--space-sm));
   padding-left: max(var(--space-lg), env(safe-area-inset-left) + var(--space-sm));
   padding-right: max(var(--space-lg), env(safe-area-inset-right) + var(--space-sm));
@@ -21,7 +23,6 @@
 @media (min-width: 768px) {
   .screen {
     padding: var(--space-2xl);
-    padding-top: var(--space-2xl);
   }
 }
 
@@ -29,7 +30,6 @@
 @media (min-width: 1024px) {
   .screen {
     padding: var(--space-3xl) var(--space-4xl);
-    padding-top: var(--space-3xl);
     max-width: var(--container-max-width);
     margin: 0 auto;
   }
@@ -166,8 +166,12 @@
 
 /* Main content area */
 .main-content {
-  margin-top: var(--header-height);
-  min-height: calc(100vh - var(--header-height));
+  position: absolute;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden; /* Screens handle their own scrolling */
 }
 
 /* Café Hub Screen */
@@ -1277,11 +1281,6 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .screen {
-    padding: 15px;
-    padding-top: 15px;
-  }
-  
   .persistent-header {
     padding: 0 15px;
   }
@@ -1586,11 +1585,11 @@
 
 /* ===== DM SCREEN - RESPONSIVE ===== */
 .dm-screen {
-  min-height: calc(100vh - var(--header-height));
-  height: calc(100vh - var(--header-height));
+  height: 100%; /* Fill the screen container */
   display: flex;
   flex-direction: column;
   padding: 0;
+  overflow: hidden; /* Parent manages layout, children scroll */
 }
 
 .dm-header {
@@ -1607,8 +1606,7 @@
   .dm-screen {
     max-width: 600px;
     margin: 0 auto;
-    min-height: calc(100vh - var(--header-height));
-    height: calc(100vh - var(--header-height));
+    height: 100%;
     border-radius: 20px 20px 0 0;
     overflow: hidden;
     box-shadow: var(--shadow-lg);
@@ -1718,6 +1716,7 @@
 .response-options {
   flex-shrink: 0;
   padding: var(--space-lg);
+  padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom) + var(--space-sm));
   border-top: 1px solid #eee;
   background: white;
   display: flex;

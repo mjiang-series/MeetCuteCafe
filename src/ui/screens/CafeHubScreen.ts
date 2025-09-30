@@ -226,27 +226,28 @@ export class CafeHubScreen extends BaseScreen {
         this.updateCharacterPosition(data.characterId, data.position as any);
       });
 
-      // Start movement
-      this.movementSystem.start();
-      
+      // Note: Movement system is started AFTER characters are rendered (see onShow)
       console.log(`Movement system initialized with ${characters.length} characters`);
     }
   }
 
   /**
-   * Update character position in the DOM
+   * Update character position in the DOM (called by movement system events)
    */
   private updateCharacterPosition(characterId: string, position: { x: number; y: number }): void {
     const characterElement = document.getElementById(`character-${characterId}`);
     if (characterElement) {
       const { tileSize } = this.tileSystem.getDimensions();
-      characterElement.style.left = `${position.x * tileSize + 4}px`; // Center in tile
-      characterElement.style.top = `${position.y * tileSize - 8}px`; // Slightly above tile
+      characterElement.style.left = `${position.x * tileSize}px`;
+      characterElement.style.top = `${position.y * tileSize - 4}px`;
+    } else {
+      // Element doesn't exist yet, might need to render
+      console.warn(`Character element ${characterId} not found, may need re-render`);
     }
   }
 
   /**
-   * Render moving characters
+   * Render moving characters - ONLY called once on initialization
    */
   private renderCharacters(): void {
     if (!this.movementSystem) {
@@ -263,22 +264,22 @@ export class CafeHubScreen extends BaseScreen {
     const { tileSize } = this.tileSystem.getDimensions();
     const characters = this.movementSystem.getCharacters();
     
-    console.log(`Rendering ${characters.length} characters`);
+    console.log(`Rendering ${characters.length} characters with colors:`, characters.map(c => ({ id: c.id, color: c.color })));
 
-    // Clear existing characters
+    // Always clear and re-render to ensure fresh state
     charactersLayer.innerHTML = '';
-
-      // Render each character
-      characters.forEach(character => {
+    
+    // Create all character elements
+    characters.forEach(character => {
         const characterElement = document.createElement('div');
         characterElement.id = `character-${character.id}`;
         characterElement.className = `character ${character.type}`;
         characterElement.style.cssText = `
           position: absolute;
-          left: ${character.currentPos.x * tileSize + 4}px;
-          top: ${character.currentPos.y * tileSize - 8}px;
-          width: 24px;
-          height: 32px;
+          left: ${character.currentPos.x * tileSize}px;
+          top: ${character.currentPos.y * tileSize - 4}px;
+          width: ${tileSize}px;
+          height: ${tileSize + 4}px;
           z-index: 15;
           transition: left 0.3s ease, top 0.3s ease;
           cursor: ${character.type === 'npc' ? 'pointer' : 'default'};
@@ -291,15 +292,16 @@ export class CafeHubScreen extends BaseScreen {
         spriteElement.style.cssText = `
           width: 100%; 
           height: 100%;
-          border: 2px solid ${character.color};
-          border-radius: 4px;
+          border: 1px solid ${character.color};
+          border-radius: 6px;
           background-color: ${character.color};
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
           font-weight: bold;
-          font-size: 12px;
+          font-size: 16px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         `;
         
         // Add character letter
@@ -309,11 +311,11 @@ export class CafeHubScreen extends BaseScreen {
         
         characterElement.appendChild(spriteElement);
 
-        // Add click handler for NPCs
+        // Add click handler for NPCs (only once!)
         if (character.type === 'npc') {
           characterElement.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent event bubbling
-            e.preventDefault(); // Prevent default behavior
+            e.stopPropagation();
+            e.preventDefault();
             console.log(`🗨️ Opening DM with ${character.id}`);
             this.eventSystem.emit('ui:show_screen', {
               screenId: 'dm',
@@ -346,7 +348,7 @@ export class CafeHubScreen extends BaseScreen {
         }
 
         charactersLayer.appendChild(characterElement);
-      });
+    });
   }
 
   /**
@@ -569,21 +571,19 @@ export class CafeHubScreen extends BaseScreen {
     // Set the correct header variant for cafe hub
     this.eventSystem.emit('header:set_variant', { variant: 'cafe-hub' });
     
-    // Initialize movement system when screen is shown
+    // Initialize movement system when screen is shown (but don't start it yet)
     this.initializeMovementSystem();
     
     // Add resize listener for responsive updates
     this.setupResizeListener();
     
-    // Render characters after a short delay to ensure DOM is ready
+    // Render characters FIRST, THEN start movement system
     setTimeout(() => {
       this.renderCharacters();
       
-      // Start a periodic re-render to keep characters visible
-      if (!this.animationUpdateInterval) {
-        this.animationUpdateInterval = window.setInterval(() => {
-          this.renderCharacters();
-        }, 1000); // Re-render every second
+      // NOW start the movement system after characters are rendered
+      if (this.movementSystem) {
+        this.movementSystem.start();
       }
     }, 100);
   }
@@ -701,17 +701,41 @@ export class CafeHubScreen extends BaseScreen {
 
 
   /**
-   * Cleanup
+   * Cleanup - Remove event listeners and stop systems to prevent memory leaks
    */
   override onDestroy(): void {
+    // Stop movement system
     if (this.movementSystem) {
       this.movementSystem.destroy();
       this.movementSystem = null;
     }
+    
+    // Clear any intervals (though we removed the problematic one)
     if (this.animationUpdateInterval) {
       window.clearInterval(this.animationUpdateInterval);
       this.animationUpdateInterval = null;
     }
+    
+    // Remove event listeners
+    this.eventSystem.off('character:moved', this.updateCharacterPosition);
+    
+    // Clear character elements to free up DOM
+    const charactersLayer = document.getElementById('characters-layer');
+    if (charactersLayer) {
+      charactersLayer.innerHTML = '';
+    }
+    
     super.onDestroy?.();
+  }
+  
+  /**
+   * Cleanup on hide
+   */
+  override onHide(): void {
+    // Stop movement system when screen is hidden
+    if (this.movementSystem) {
+      this.movementSystem.stop();
+    }
+    super.onHide?.();
   }
 }
