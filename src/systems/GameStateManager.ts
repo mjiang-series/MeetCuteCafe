@@ -372,6 +372,33 @@ export class GameStateManager {
   }
 
   /**
+   * Check if save data exists
+   */
+  hasSaveData(): boolean {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    return savedData !== null;
+  }
+
+  /**
+   * Reset game state - creates a new player
+   */
+  resetGame(): void {
+    // Clear local storage
+    localStorage.removeItem(STORAGE_KEY);
+    
+    // Create new player
+    this.player = this.createNewPlayer();
+    
+    // Save immediately
+    this.saveGame();
+    
+    // Emit reset event
+    this.eventSystem.emit('game:reset', {});
+    
+    console.log('🔄 Game state reset');
+  }
+
+  /**
    * Cleanup
    */
   destroy(): void {

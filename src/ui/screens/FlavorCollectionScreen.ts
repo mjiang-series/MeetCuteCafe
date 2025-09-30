@@ -57,24 +57,11 @@ export class FlavorCollectionScreen extends BaseScreen {
     return `
       <div class="flavor-collection-screen">
         <div class="collection-header">
-          <div class="collection-stats">
-            <div class="stat-card">
-              <div class="stat-value">${player.flavors.length}</div>
-              <div class="stat-label">Story Moments</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value">${this.getAverageLevel()}</div>
-              <div class="stat-label">Avg Level</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value">${this.getTotalPower()}</div>
-              <div class="stat-label">Total Power</div>
-            </div>
-          </div>
-
-          <div class="affinity-filters">
-            <button class="filter-btn filter-btn--active" data-action="filter-npc" data-npc="all">
-              All
+          <div class="npc-filter-bar">
+            <button class="npc-filter-option active" data-action="filter-npc" data-npc="all">
+              <span class="filter-icon material-icons">apps</span>
+              <span class="filter-label">All</span>
+              <span class="memory-count">${player.flavors.length}</span>
             </button>
             ${this.renderNPCFilters()}
           </div>
@@ -103,22 +90,25 @@ export class FlavorCollectionScreen extends BaseScreen {
   }
 
   /**
-   * Render affinity filter buttons
+   * Render NPC filter buttons (matching Journal UI/UX)
    */
   private renderNPCFilters(): string {
-    const npcs: { id: string; name: string; }[] = [
-      { id: 'aria', name: 'Aria' },
-      { id: 'kai', name: 'Kai' },
-      { id: 'elias', name: 'Elias' }
+    const npcs: { id: string; name: string; portraitPath: string; }[] = [
+      { id: 'aria', name: 'Aria', portraitPath: '/art/npc/aria/aria_portrait.png' },
+      { id: 'kai', name: 'Kai', portraitPath: '/art/npc/kai/kai_portrait.png' },
+      { id: 'elias', name: 'Elias', portraitPath: '/art/npc/elias/elias_portrait.png' }
     ];
     
     return npcs.map(npc => {
       const count = this.getNPCFlavorCount(npc.id);
       
       return `
-        <button class="filter-btn" data-action="filter-npc" data-npc="${npc.id}">
-          <span class="filter-name">${npc.name}</span>
-          <span class="filter-count">(${count})</span>
+        <button class="npc-filter-option" data-action="filter-npc" data-npc="${npc.id}">
+          <div class="npc-avatar-small">
+            <img src="${npc.portraitPath}" alt="${npc.name}" />
+          </div>
+          <span class="filter-label">${npc.name}</span>
+          <span class="memory-count">${count}</span>
         </button>
       `;
     }).join('');
@@ -161,49 +151,66 @@ export class FlavorCollectionScreen extends BaseScreen {
     const canUpgrade = this.canUpgradeFlavor(playerFlavor);
     const upgradeCost = this.getUpgradeCost(playerFlavor.level);
 
+    // Get preview asset for the flavor
+    const previewAsset = 'previewAsset' in flavorData ? (flavorData as any).previewAsset : null;
+    const npcId = 'npcId' in flavorData ? (flavorData as any).npcId : 'unknown';
+    const storyTagline = 'storyTagline' in flavorData ? (flavorData as any).storyTagline : flavorData.description;
+
     return `
-      <div class="flavor-card flavor-card--${flavorData.rarity.replace('★', 'star')} ${playerFlavor.favorite ? 'flavor-card--favorite' : ''}"
+      <div class="memory-preview-card flavor-preview-card" 
            data-action="open-flavor" 
            data-flavor-id="${playerFlavor.flavorId}">
         
-        <div class="flavor-header">
-          <div class="flavor-icon">${this.getAffinityEmoji(flavorData.affinity)}</div>
-          <div class="flavor-rarity">${flavorData.rarity}</div>
+        <div class="memory-preview-image">
+          ${previewAsset ? `
+            ${previewAsset.endsWith('.mp4') ? `
+              <video autoplay muted loop playsinline>
+                <source src="${previewAsset}" type="video/mp4">
+              </video>
+            ` : `
+              <img src="${previewAsset}" alt="${flavorData.name}" />
+            `}
+          ` : `
+            <div class="flavor-preview-placeholder">
+              <div class="flavor-icon-large">${this.getAffinityEmoji(flavorData.affinity)}</div>
+            </div>
+          `}
+          
+          <!-- Rarity badge (top left) -->
+          <div class="memory-mood-badge rarity-badge rarity--${flavorData.rarity.replace('★', 'star')}">
+            ${flavorData.rarity}
+          </div>
+          
+          <!-- Flavor affinity badge (top right) -->
+          <div class="memory-date-badge affinity-badge affinity-badge--${flavorData.affinity.toLowerCase()}">
+            ${flavorData.affinity.toUpperCase()}
+          </div>
+          
           ${playerFlavor.favorite ? '<div class="favorite-indicator">⭐</div>' : ''}
         </div>
 
-        <div class="flavor-info">
-          <h3 class="flavor-name">${flavorData.name}</h3>
-          ${'npcId' in flavorData ? `<div class="flavor-npc">with ${ (flavorData as any).npcId.charAt(0).toUpperCase() + (flavorData as any).npcId.slice(1)}</div>` : ''}
-          ${'storyTagline' in flavorData ? `<div class="flavor-story">${(flavorData as any).storyTagline}</div>` : `<div class="flavor-affinity">${flavorData.affinity}</div>`}
-          <div class="flavor-level">Level ${playerFlavor.level}</div>
-        </div>
-
-        <div class="flavor-stats">
-          <div class="stat-row">
-            <span class="stat-label">Power:</span>
-            <span class="stat-value">${currentPower}</span>
+        <div class="memory-preview-content">
+          <div class="memory-timestamp">
+            <span class="material-icons">person</span>
+            <span>with ${npcId.charAt(0).toUpperCase() + npcId.slice(1)}</span>
+            <span class="level-indicator">Level ${playerFlavor.level}</span>
           </div>
-          ${playerFlavor.level < 10 ? `
-            <div class="stat-row upgrade-preview">
-              <span class="stat-label">Next Level:</span>
-              <span class="stat-value">${nextLevelPower} <span class="stat-increase">(+${nextLevelPower - currentPower})</span></span>
+          
+          <h3 class="memory-title">${flavorData.name}</h3>
+          <p class="memory-preview-text">${storyTagline}</p>
+          
+          <div class="flavor-stats-mini">
+            <div class="stat-item">
+              <span class="stat-label">Power</span>
+              <span class="stat-value">${currentPower}</span>
             </div>
-          ` : ''}
-        </div>
-
-        <div class="flavor-actions">
-          ${playerFlavor.level < 10 ? `
-            <button class="upgrade-btn ${canUpgrade ? 'upgrade-btn--available' : 'upgrade-btn--disabled'}"
-                    data-action="upgrade-flavor" 
-                    data-flavor-id="${playerFlavor.flavorId}"
-                    ${!canUpgrade ? 'disabled' : ''}>
-              <span class="upgrade-cost">🪙 ${upgradeCost.coins}</span>
-              <span class="upgrade-label">Upgrade</span>
-            </button>
-          ` : `
-            <div class="max-level-indicator">MAX LEVEL</div>
-          `}
+            ${playerFlavor.level < 10 ? `
+              <div class="stat-item">
+                <span class="stat-label">Next</span>
+                <span class="stat-value">${nextLevelPower}</span>
+              </div>
+            ` : ''}
+          </div>
         </div>
       </div>
     `;
@@ -436,11 +443,11 @@ export class FlavorCollectionScreen extends BaseScreen {
    */
   private applyNPCFilter(npcId: string): void {
     // Update active filter button
-    const filterButtons = this.querySelectorAll('.filter-btn');
+    const filterButtons = this.querySelectorAll('.npc-filter-option');
     filterButtons.forEach(btn => {
-      btn.classList.remove('filter-btn--active');
+      btn.classList.remove('active');
       if (btn.getAttribute('data-npc') === npcId) {
-        btn.classList.add('filter-btn--active');
+        btn.classList.add('active');
       }
     });
 
@@ -474,55 +481,132 @@ export class FlavorCollectionScreen extends BaseScreen {
     const canUpgrade = this.canUpgradeFlavor(playerFlavor);
     const upgradeCost = this.getUpgradeCost(playerFlavor.level);
 
+    // Get extended flavor data
+    const previewAsset = 'previewAsset' in flavorData ? (flavorData as any).previewAsset : null;
+    const npcId = 'npcId' in flavorData ? (flavorData as any).npcId : 'unknown';
+    const storyTagline = 'storyTagline' in flavorData ? (flavorData as any).storyTagline : flavorData.description;
+    const nextLevelPower = this.calculateFlavorPower(
+      { ...playerFlavor, level: playerFlavor.level + 1 }, 
+      flavorData
+    );
+
     body.innerHTML = `
-      <div class="flavor-details">
-        <div class="flavor-showcase">
-          <div class="showcase-icon">${this.getAffinityEmoji(flavorData.affinity)}</div>
-          <div class="showcase-info">
-            <div class="flavor-rarity rarity--${flavorData.rarity.replace('★', 'star')}">${flavorData.rarity}</div>
-            <div class="flavor-affinity">${flavorData.affinity}</div>
-            <div class="flavor-level">Level ${playerFlavor.level}</div>
+      <div class="flavor-details-extended">
+        <!-- Large preview section -->
+        <div class="flavor-preview-large">
+          <div class="memory-preview-image">
+            ${previewAsset ? `
+              ${previewAsset.endsWith('.mp4') ? `
+                <video autoplay muted loop playsinline>
+                  <source src="${previewAsset}" type="video/mp4">
+                </video>
+              ` : `
+                <img src="${previewAsset}" alt="${flavorData.name}" />
+              `}
+            ` : `
+              <div class="flavor-preview-placeholder">
+                <div class="flavor-icon-large">${this.getAffinityEmoji(flavorData.affinity)}</div>
+              </div>
+            `}
+            
+            <!-- Rarity badge (top left) -->
+            <div class="memory-mood-badge rarity-badge rarity--${flavorData.rarity.replace('★', 'star')}">
+              ${flavorData.rarity}
+            </div>
+            
+            <!-- Flavor affinity badge (top right) -->
+            <div class="memory-date-badge affinity-badge affinity-badge--${flavorData.affinity.toLowerCase()}">
+              ${flavorData.affinity.toUpperCase()}
+            </div>
+            
+            ${playerFlavor.favorite ? '<div class="favorite-indicator">⭐</div>' : ''}
           </div>
         </div>
 
-        <div class="flavor-description">
-          <p>${flavorData.description}</p>
-        </div>
+        <!-- Extended content -->
+        <div class="flavor-details-content">
+          <div class="flavor-header-extended">
+            <div class="flavor-meta">
+              <div class="memory-timestamp">
+                <span class="material-icons">person</span>
+                <span>with ${npcId.charAt(0).toUpperCase() + npcId.slice(1)}</span>
+                <span class="level-indicator">Level ${playerFlavor.level}</span>
+              </div>
+            </div>
+            
+            <h2 class="flavor-title-extended">${flavorData.name}</h2>
+            <p class="flavor-story-extended">${storyTagline}</p>
+          </div>
 
-        <div class="flavor-stats-detail">
-          <div class="stat-row">
-            <span class="stat-label">Current Power:</span>
-            <span class="stat-value">${currentPower}</span>
+          <!-- Detailed stats -->
+          <div class="flavor-stats-extended">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Current Power</div>
+                <div class="stat-value">${currentPower}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Base Power</div>
+                <div class="stat-value">${flavorData.basePower}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Level</div>
+                <div class="stat-value">${playerFlavor.level}/10</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Acquired</div>
+                <div class="stat-value">${new Date(playerFlavor.acquiredAt).toLocaleDateString()}</div>
+              </div>
+            </div>
+            
+            ${playerFlavor.level < 10 ? `
+              <div class="upgrade-preview">
+                <div class="upgrade-label">Next Level Preview</div>
+                <div class="power-comparison">
+                  <span class="current-power">${currentPower}</span>
+                  <span class="arrow">→</span>
+                  <span class="next-power">${nextLevelPower}</span>
+                  <span class="power-increase">(+${nextLevelPower - currentPower})</span>
+                </div>
+              </div>
+            ` : ''}
           </div>
-          <div class="stat-row">
-            <span class="stat-label">Base Power:</span>
-            <span class="stat-value">${flavorData.basePower}</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">Acquired:</span>
-            <span class="stat-value">${new Date(playerFlavor.acquiredAt).toLocaleDateString()}</span>
-          </div>
-        </div>
 
-        <div class="modal-actions">
-          ${playerFlavor.level < 10 ? `
-            <button class="btn ${canUpgrade ? 'btn--primary' : 'btn--disabled'}" 
-                    data-action="upgrade-flavor" 
-                    data-flavor-id="${flavorId}"
-                    ${!canUpgrade ? 'disabled' : ''}>
-              Upgrade (🪙 ${upgradeCost.coins})
+          <!-- Description -->
+          <div class="flavor-description-extended">
+            <h3>Description</h3>
+            <p>${flavorData.description}</p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flavor-actions-extended">
+            ${playerFlavor.level < 10 ? `
+              <button class="btn ${canUpgrade ? 'btn--primary' : 'btn--disabled'}" 
+                      data-action="upgrade-flavor" 
+                      data-flavor-id="${flavorId}"
+                      ${!canUpgrade ? 'disabled' : ''}>
+                <span class="material-icons">trending_up</span>
+                Upgrade (🪙 ${upgradeCost.coins})
+              </button>
+            ` : `
+              <div class="max-level-notice">
+                <span class="material-icons">star</span>
+                This flavor is at maximum level!
+              </div>
+            `}
+            
+            <button class="btn btn--secondary" 
+                    data-action="toggle-favorite" 
+                    data-flavor-id="${flavorId}">
+              <span class="material-icons">${playerFlavor.favorite ? 'favorite' : 'favorite_border'}</span>
+              ${playerFlavor.favorite ? 'Unfavorite' : 'Favorite'}
             </button>
-          ` : `
-            <div class="max-level-notice">This flavor is at maximum level!</div>
-          `}
-          
-          <button class="btn btn--secondary" 
-                  data-action="toggle-favorite" 
-                  data-flavor-id="${flavorId}">
-            ${playerFlavor.favorite ? 'Unfavorite' : 'Favorite'} ⭐
-          </button>
-          
-          <button class="btn btn--secondary" data-action="close-modal">Close</button>
+            
+            <button class="btn btn--secondary" data-action="close-modal">
+              <span class="material-icons">close</span>
+              Close
+            </button>
+          </div>
         </div>
       </div>
     `;

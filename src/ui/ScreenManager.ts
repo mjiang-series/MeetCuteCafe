@@ -6,6 +6,7 @@
 import type { EventSystem } from '@/systems/EventSystem';
 
 export type ScreenId = 
+  | 'menu'
   | 'welcome'
   | 'cafe-hub'
   | 'orders'

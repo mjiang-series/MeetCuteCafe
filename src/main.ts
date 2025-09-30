@@ -16,6 +16,7 @@ import { ConversationManager } from '@/systems/ConversationManager';
 import { GachaSystem } from '@/systems/GachaSystem';
 import { ScreenManager } from '@/ui/ScreenManager';
 import { PersistentHeader } from '@/ui/PersistentHeader';
+import { MenuScreen } from '@/ui/screens/MenuScreen';
 import { CafeHubScreen } from '@/ui/screens/CafeHubScreen';
 import { OrdersScreen } from '@/ui/screens/OrdersScreen';
 import { FlavorCollectionScreen } from '@/ui/screens/FlavorCollectionScreen';
@@ -106,17 +107,8 @@ class MeetCuteCafeGame {
     this.orderGenerator.start();
     console.log('✅ Order Generator started');
 
-      // Ensure persistent header is visible and set to cafe-hub variant
-      this.eventSystem.emit('header:set_variant', { variant: 'cafe-hub' });
-      
-      // Force header visibility
-      const headerElement = this.persistentHeader.getElement();
-      headerElement.style.display = 'flex';
-      headerElement.style.visibility = 'visible';
-      headerElement.style.opacity = '1';
-      
-      // Start with café hub
-      this.screenManager.navigateTo('cafe-hub');
+      // Start with menu screen
+      this.screenManager.navigateTo('menu');
 
       // Make game systems available globally for screens
       (window as any).game = this;
@@ -234,6 +226,7 @@ class MeetCuteCafeGame {
    */
   private initializeScreens(): void {
     // Create and register screens
+    const menuScreen = new MenuScreen(this.eventSystem, this.gameStateManager);
     const cafeHubScreen = new CafeHubScreen(this.eventSystem, this.gameStateManager, this.assetManager);
     const ordersScreen = new OrdersScreen(this.eventSystem, this.gameStateManager, this.assetManager, this.orderGenerator);
     const flavorCollectionScreen = new FlavorCollectionScreen(this.eventSystem, this.gameStateManager, this.assetManager);
@@ -244,6 +237,7 @@ class MeetCuteCafeGame {
     const orderResultsScreen = new OrderResultsScreen(this.eventSystem, this.gameStateManager);
     const gachaScreen = new GachaScreen(this.eventSystem, this.gameStateManager, this.assetManager, this.gachaSystem);
 
+    this.screenManager.registerScreen(menuScreen);
     this.screenManager.registerScreen(cafeHubScreen);
     this.screenManager.registerScreen(ordersScreen);
     this.screenManager.registerScreen(flavorCollectionScreen);

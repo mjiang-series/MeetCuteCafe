@@ -111,6 +111,15 @@ export class PersistentHeader {
       this.setVariant(data.variant as HeaderVariant, data.customTitle, data.npcData);
     });
 
+    // Listen for hide/show events
+    this.eventSystem.on('header:hide', () => {
+      this.element.style.display = 'none';
+    });
+
+    this.eventSystem.on('header:show', () => {
+      this.element.style.display = 'flex';
+    });
+
     // Listen for currency updates
     this.eventSystem.on('header:update_currency', () => {
       this.updateCurrencies();
