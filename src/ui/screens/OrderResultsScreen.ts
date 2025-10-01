@@ -47,16 +47,25 @@ export class OrderResultsScreen extends BaseScreen {
       this.npcManager = systems.npcManager;
     }
 
-    if (data) {
-      this.resultsData = data as OrderResultsData;
+    if (data && data.order) {
+      // Convert order data to OrderResultsData format
+      const order = data.order;
+      this.resultsData = {
+        orderId: order.orderId,
+        rewards: order.rewards,
+        npcId: order.npcId,
+        memoryId: data.newMemoryId, // Only exists for NPC orders
+        orderType: order.kind,
+        customerType: order.customerType
+      };
       
-      // Load the generated memory if one exists
-      if (data.memoryId && this.memoryGenerator) {
-        console.log('🔍 Loading memory with ID:', data.memoryId);
-        this.generatedMemory = this.memoryGenerator.getMemory(data.memoryId);
+      // Load the generated memory ONLY if newMemoryId is provided (NPC orders only)
+      if (data.newMemoryId && this.memoryGenerator) {
+        console.log('🔍 Loading memory with ID:', data.newMemoryId);
+        this.generatedMemory = this.memoryGenerator.getMemory(data.newMemoryId);
         console.log('💭 Loaded memory:', this.generatedMemory ? 'Found' : 'Not found');
       } else {
-        console.log('⚠️ Cannot load memory - memoryId:', data.memoryId, 'memoryGenerator:', !!this.memoryGenerator);
+        this.generatedMemory = null;
       }
     }
 

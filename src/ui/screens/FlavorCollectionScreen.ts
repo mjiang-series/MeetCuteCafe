@@ -22,6 +22,7 @@ interface FlavorData {
 export class FlavorCollectionScreen extends BaseScreen {
   private _flavorDatabase: FlavorData[] | null = null;
   private gachaSystem: GachaSystem | null = null;
+  private modalVideo: HTMLVideoElement | null = null;
 
   constructor(
     eventSystem: EventSystem,
@@ -164,11 +165,9 @@ export class FlavorCollectionScreen extends BaseScreen {
         <div class="memory-preview-image">
           ${previewAsset ? `
             ${previewAsset.endsWith('.mp4') ? `
-              <video autoplay muted loop playsinline>
-                <source src="${previewAsset}" type="video/mp4">
-              </video>
+              <img src="${previewAsset.replace('_flavor_preview_5star.mp4', '_flavor_preview_placeholder.png')}" alt="${flavorData.name}" loading="lazy" />
             ` : `
-              <img src="${previewAsset}" alt="${flavorData.name}" />
+              <img src="${previewAsset}" alt="${flavorData.name}" loading="lazy" />
             `}
           ` : `
             <div class="flavor-preview-placeholder">
@@ -402,6 +401,24 @@ export class FlavorCollectionScreen extends BaseScreen {
   }
 
   /**
+   * Handle screen hide
+   */
+  protected override onHide(): void {
+    super.onHide();
+    // Clean up modal video when leaving screen
+    this.cleanupModalVideo();
+  }
+
+  /**
+   * Handle screen destroy
+   */
+  protected override onDestroy(): void {
+    super.onDestroy();
+    // Final cleanup
+    this.cleanupModalVideo();
+  }
+
+  /**
    * Handle actions
    */
   protected override handleAction(action: string, element: HTMLElement): void {
@@ -460,6 +477,18 @@ export class FlavorCollectionScreen extends BaseScreen {
   }
 
   /**
+   * Clean up modal video
+   */
+  private cleanupModalVideo(): void {
+    if (this.modalVideo) {
+      this.modalVideo.pause();
+      this.modalVideo.removeAttribute('src');
+      this.modalVideo.load();
+      this.modalVideo = null;
+    }
+  }
+
+  /**
    * Open flavor detail modal
    */
   private openFlavorModal(flavorId: string): void {
@@ -497,11 +526,11 @@ export class FlavorCollectionScreen extends BaseScreen {
           <div class="memory-preview-image">
             ${previewAsset ? `
               ${previewAsset.endsWith('.mp4') ? `
-                <video autoplay muted loop playsinline>
+                <video autoplay muted loop playsinline controls>
                   <source src="${previewAsset}" type="video/mp4">
                 </video>
               ` : `
-                <img src="${previewAsset}" alt="${flavorData.name}" />
+                <img src="${previewAsset}" alt="${flavorData.name}" loading="lazy" />
               `}
             ` : `
               <div class="flavor-preview-placeholder">
@@ -613,6 +642,12 @@ export class FlavorCollectionScreen extends BaseScreen {
 
     modal.style.display = 'flex';
     this.bindEventHandlers();
+    
+    // Track the modal video for cleanup
+    const video = modal.querySelector('video');
+    if (video) {
+      this.modalVideo = video as HTMLVideoElement;
+    }
   }
 
   /**
@@ -621,6 +656,9 @@ export class FlavorCollectionScreen extends BaseScreen {
   private closeFlavorModal(): void {
     const modal = this.querySelector('#flavor-modal');
     if (modal) {
+      // Clean up the modal video
+      this.cleanupModalVideo();
+      
       modal.style.display = 'none';
     }
   }

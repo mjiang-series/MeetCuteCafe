@@ -15,6 +15,8 @@ export class OrdersScreen extends BaseScreen {
   private _mockOrders: OrderBase[] | null = null;
   private _staticNPCOrders: OrderBase[] | null = null;
   private orderGenerator: OrderGenerator | null = null;
+  private usedFlavorIds: Set<string> = new Set(); // Track flavors used today
+  private currentOrderId: string | null = null; // Track current order being fulfilled
 
   constructor(
     eventSystem: EventSystem,
@@ -121,12 +123,12 @@ export class OrdersScreen extends BaseScreen {
           </div>
         </div>
 
-        <!-- Order Fulfillment Modal (hidden by default) -->
-        <div class="order-modal" id="order-modal" style="display: none;">
+        <!-- Flavor Selection Modal (hidden by default) -->
+        <div class="flavor-modal" id="flavor-modal" style="display: none;">
           <div class="modal-content">
             <div class="modal-header">
-              <h3 id="modal-title">Fulfill Order</h3>
-              <button class="modal-close" data-action="close-modal">&times;</button>
+              <h3 id="modal-title">Select Flavors</h3>
+              <button class="modal-close" data-action="close-flavor-modal">&times;</button>
             </div>
             <div class="modal-body" id="modal-body">
               <!-- Content populated dynamically -->
@@ -146,51 +148,63 @@ export class OrdersScreen extends BaseScreen {
     const canFulfill = this.canFulfillOrder(order);
     
     return `
-      <div class="order-card order-card--npc ${canFulfill ? '' : 'order-card--locked'}"
-           data-action="open-order" 
-           data-order-id="${order.orderId}">
-        <div class="order-header">
-          <div class="order-npc">
-            <img src="${getNpcPortraitPath(npcId as any)}" alt="${npcName}" class="npc-avatar-small" />
-            <div class="npc-info">
-              <div class="npc-name">${npcName}</div>
-              <div class="order-type">Special Request</div>
-            </div>
+      <div class="order-card order-card--npc ${canFulfill ? '' : 'order-card--locked'}">
+        <!-- NPC Info -->
+        <div class="order-npc-header">
+          <img src="${getNpcPortraitPath(npcId as any)}" alt="${npcName}" class="npc-avatar" />
+          <div class="npc-request">
+            <div class="npc-name">${npcName}'s Special Request</div>
+            <div class="npc-message">"${this.getNPCOrderMessage(npcId)}"</div>
           </div>
-          <div class="order-rewards">
+        </div>
+        
+        <!-- Requirements -->
+        <div class="order-requirements">
+          <h4>Required Flavors:</h4>
+          <div class="flavor-requirements">
+            ${order.requirements.slots.map(slot => `
+              <div class="required-flavor">
+                <span class="flavor-emoji">${this.getAffinityEmoji(slot.affinity)}</span>
+                <span class="flavor-name">${slot.affinity}</span>
+                <span class="flavor-level">Lv ${slot.minLevel || 1}+</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <!-- Rewards -->
+        <div class="order-rewards-section">
+          <h4>Rewards:</h4>
+          <div class="reward-list">
             <div class="reward-item">
               <span class="reward-icon">🪙</span>
-              <span class="reward-value">${order.rewards.coins}</span>
+              <span class="reward-value">${order.rewards.coins} Coins</span>
             </div>
             <div class="reward-item">
               <span class="reward-icon">💎</span>
-              <span class="reward-value">${order.rewards.diamonds || 0}</span>
+              <span class="reward-value">${order.rewards.diamonds || 0} Diamonds</span>
             </div>
-            <div class="reward-item memory-reward">
+            <div class="reward-item">
               <span class="reward-icon">💕</span>
-              <span class="reward-label">Memory</span>
+              <span class="reward-value">New Memory</span>
             </div>
           </div>
         </div>
         
-        <div class="order-requirements">
-          <h4>Required Flavors:</h4>
-          <div class="flavor-slots">
-            ${order.requirements.slots.map((slot, index) => this.renderFlavorSlot(slot, index)).join('')}
-          </div>
-        </div>
-        
-        <div class="order-footer">
+        <!-- Actions -->
+        <div class="order-actions">
           ${canFulfill ? `
-            <div class="order-actions">
-              <div class="order-status order-status--ready">Ready to fulfill!</div>
-              <button class="btn btn-complete" data-action="complete-order" data-order-id="${order.orderId}">
-                Complete Order
+            <button class="btn btn--primary btn-fulfill" data-action="select-flavors" data-order-id="${order.orderId}">
+              Select Flavors
+            </button>
+          ` : `
+            <div class="insufficient-notice">
+              <p>You need more flavors to complete this order.</p>
+              <button class="btn btn--secondary" data-navigate="gacha">
+                Get More Flavors
               </button>
             </div>
-          ` : 
-            '<div class="order-status order-status--locked">Need more flavors</div>'
-          }
+          `}
         </div>
       </div>
     `;
@@ -205,46 +219,64 @@ export class OrdersScreen extends BaseScreen {
     const timeLeft = this.formatTimeLeft(order.expiresAt - Date.now());
     
     return `
-      <div class="order-card order-card--customer ${canFulfill ? '' : 'order-card--locked'} ${urgencyClass}"
-           data-action="open-order" 
-           data-order-id="${order.orderId}">
-        <div class="order-header">
-          <div class="order-customer">
-            <div class="customer-avatar">${this.getCustomerAvatar(order.customerType)}</div>
-            <div class="customer-info">
-              <div class="customer-name">${order.customerType || `Customer #${order.orderId.slice(-3)}`}</div>
-              <div class="order-type">
-                ${order.urgency === 'high' ? '🔥 Urgent' : order.urgency === 'medium' ? '⚡ Priority' : 'Regular'} Order
-                <span class="order-timer">⏰ ${timeLeft}</span>
-              </div>
+      <div class="order-card order-card--customer ${canFulfill ? '' : 'order-card--locked'} ${urgencyClass}">
+        <!-- Customer Info -->
+        <div class="order-customer-header">
+          <div class="customer-avatar">${this.getCustomerAvatar(order.customerType)}</div>
+          <div class="customer-request">
+            <div class="customer-name">${order.customerType || `Customer #${order.orderId.slice(-3)}`}</div>
+            <div class="order-urgency">
+              ${order.urgency === 'high' ? '🔥 Urgent' : order.urgency === 'medium' ? '⚡ Priority' : '☕ Regular'} Order
             </div>
+            <div class="order-timer">⏰ ${timeLeft}</div>
           </div>
-          <div class="order-rewards">
+        </div>
+        
+        <!-- Requirements -->
+        <div class="order-requirements">
+          <h4>Required Flavors:</h4>
+          <div class="flavor-requirements">
+            ${order.requirements.slots.map(slot => `
+              <div class="required-flavor">
+                <span class="flavor-emoji">${this.getAffinityEmoji(slot.affinity)}</span>
+                <span class="flavor-name">${slot.affinity}</span>
+                <span class="flavor-level">Lv ${slot.minLevel || 1}+</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <!-- Rewards -->
+        <div class="order-rewards-section">
+          <h4>Rewards:</h4>
+          <div class="reward-list">
             <div class="reward-item">
               <span class="reward-icon">🪙</span>
-              <span class="reward-value">${order.rewards.coins}</span>
+              <span class="reward-value">${order.rewards.coins} Coins</span>
             </div>
             ${order.rewards.diamonds ? `
               <div class="reward-item">
                 <span class="reward-icon">💎</span>
-                <span class="reward-value">${order.rewards.diamonds}</span>
+                <span class="reward-value">${order.rewards.diamonds} Diamonds</span>
               </div>
             ` : ''}
           </div>
         </div>
         
-        <div class="order-requirements">
-          <h4>Required Flavors:</h4>
-          <div class="flavor-slots">
-            ${order.requirements.slots.map((slot, index) => this.renderFlavorSlot(slot, index)).join('')}
-          </div>
-        </div>
-        
-        <div class="order-footer">
-          ${canFulfill ? 
-            '<div class="order-status order-status--ready">Ready to fulfill!</div>' :
-            '<div class="order-status order-status--locked">Need more flavors</div>'
-          }
+        <!-- Actions -->
+        <div class="order-actions">
+          ${canFulfill ? `
+            <button class="btn btn--primary btn-fulfill" data-action="select-flavors" data-order-id="${order.orderId}">
+              Select Flavors
+            </button>
+          ` : `
+            <div class="insufficient-notice">
+              <p>You need more flavors to complete this order.</p>
+              <button class="btn btn--secondary" data-navigate="gacha">
+                Get More Flavors
+              </button>
+            </div>
+          `}
         </div>
       </div>
     `;
@@ -497,23 +529,31 @@ export class OrdersScreen extends BaseScreen {
    */
   protected override handleAction(action: string, element: HTMLElement): void {
     switch (action) {
-      case 'open-order': {
+      case 'select-flavors': {
         const orderId = element.getAttribute('data-order-id');
         if (orderId) {
-          this.openOrderModal(orderId);
+          this.openFlavorSelectionModal(orderId);
         }
         break;
       }
       
-      case 'close-modal': {
-        this.closeOrderModal();
+      case 'close-flavor-modal': {
+        this.closeFlavorSelectionModal();
         break;
       }
       
-      case 'fulfill-order': {
-        const orderId = element.getAttribute('data-order-id');
-        if (orderId) {
-          this.fulfillOrder(orderId);
+      case 'select-flavor-for-slot': {
+        const flavorId = element.getAttribute('data-flavor-id');
+        const slotIndex = element.getAttribute('data-slot-index');
+        if (flavorId && slotIndex !== null) {
+          this.selectFlavorForSlot(parseInt(slotIndex), flavorId);
+        }
+        break;
+      }
+      
+      case 'confirm-fulfill-order': {
+        if (this.currentOrderId) {
+          this.fulfillOrder(this.currentOrderId);
         }
         break;
       }
@@ -524,85 +564,106 @@ export class OrdersScreen extends BaseScreen {
   }
 
   /**
-   * Open order fulfillment modal
+   * Open flavor selection modal
    */
-  private openOrderModal(orderId: string): void {
+  private openFlavorSelectionModal(orderId: string): void {
     const order = this.mockOrders.find(o => o.orderId === orderId);
     if (!order) return;
 
-    const modal = this.querySelector('#order-modal');
-    const title = this.querySelector('#modal-title');
+    this.currentOrderId = orderId;
+    const modal = this.querySelector('#flavor-modal');
     const body = this.querySelector('#modal-body');
 
-    if (!modal || !title || !body) return;
+    if (!modal || !body) return;
 
-    const isNPC = order.kind === 'NPC';
-    const npcName = isNPC ? order.npcId!.charAt(0).toUpperCase() + order.npcId!.slice(1) : '';
-    
-    title.textContent = isNPC ? `${npcName}'s Special Request` : 'Customer Order';
-    
+    const player = this.gameState.getPlayer();
+    const selectedFlavors: (string | null)[] = new Array(order.requirements.slots.length).fill(null);
+
     body.innerHTML = `
-      <div class="order-details">
-        ${isNPC ? `
-          <div class="order-npc-info">
-            <img src="${getNpcPortraitPath(order.npcId! as any)}" alt="${npcName}" class="npc-avatar" />
-            <div class="npc-message">
-              <p>"${this.getNPCOrderMessage(order.npcId!)}"</p>
-            </div>
-          </div>
-        ` : ''}
-        
-        <div class="fulfillment-area">
-          <h4>Required Flavors:</h4>
-          <div class="flavor-requirements">
-            ${order.requirements.slots.map(slot => `
-              <div class="required-flavor">
-                <span class="flavor-emoji">${this.getAffinityEmoji(slot.affinity)}</span>
-                <span class="flavor-name">${slot.affinity}</span>
-                <span class="flavor-level">Lv ${slot.minLevel || 1}+</span>
+      <div class="flavor-selection">
+        ${order.requirements.slots.map((slot, index) => {
+          const availableFlavors = player.flavors.filter(pf => {
+            const flavorDef = this.getFlavorDefinition(pf.flavorId);
+            return flavorDef && 
+                   flavorDef.affinity === slot.affinity && 
+                   pf.level >= (slot.minLevel || 1) &&
+                   !this.usedFlavorIds.has(pf.flavorId);
+          });
+
+          return `
+            <div class="flavor-slot-selection">
+              <h4>Slot ${index + 1}: ${slot.affinity} (Lv ${slot.minLevel || 1}+)</h4>
+              <div class="flavor-options">
+                ${availableFlavors.length > 0 ? availableFlavors.map(pf => {
+                  const flavorDef = this.getFlavorDefinition(pf.flavorId);
+                  return `
+                    <div class="flavor-option" 
+                         data-action="select-flavor-for-slot" 
+                         data-flavor-id="${pf.flavorId}"
+                         data-slot-index="${index}">
+                      <span class="flavor-emoji">${this.getAffinityEmoji(slot.affinity)}</span>
+                      <div class="flavor-info">
+                        <div class="flavor-name">${flavorDef?.name || pf.flavorId}</div>
+                        <div class="flavor-level">Level ${pf.level}</div>
+                      </div>
+                    </div>
+                  `;
+                }).join('') : '<p class="no-flavors">No available flavors for this slot</p>'}
               </div>
-            `).join('')}
-          </div>
-          
-          <div class="rewards-preview">
-            <h4>Rewards:</h4>
-            <div class="reward-list">
-              <div class="reward">🪙 ${order.rewards.coins} Coins</div>
-              ${order.rewards.diamonds ? `<div class="reward">💎 ${order.rewards.diamonds} Diamonds</div>` : ''}
-              ${order.rewards.memoryCandidate ? '<div class="reward special">💕 New Memory</div>' : ''}
+              <div class="selected-flavor" id="selected-${index}">
+                <em>No flavor selected</em>
+              </div>
             </div>
-          </div>
-        </div>
+          `;
+        }).join('')}
         
         <div class="modal-actions">
-          ${this.canFulfillOrder(order) ? `
-            <button class="btn btn--primary" data-action="fulfill-order" data-order-id="${order.orderId}">
-              Fulfill Order
-            </button>
-          ` : `
-            <div class="insufficient-notice">
-              <p>You need more flavors to complete this order.</p>
-              <button class="btn btn--secondary" data-navigate="flavor-collection">
-                Manage Flavors
-              </button>
-            </div>
-          `}
-          <button class="btn btn--secondary" data-action="close-modal">Cancel</button>
+          <button class="btn btn--primary" data-action="confirm-fulfill-order" id="confirm-btn" disabled>
+            Confirm Selection
+          </button>
+          <button class="btn btn--secondary" data-action="close-flavor-modal">Cancel</button>
         </div>
       </div>
     `;
 
     modal.style.display = 'flex';
-    this.bindEventHandlers(); // Re-bind for new modal content
+    this.bindEventHandlers();
   }
 
   /**
-   * Close order modal
+   * Select flavor for a slot
    */
-  private closeOrderModal(): void {
-    const modal = this.querySelector('#order-modal');
+  private selectedFlavors: Map<number, string> = new Map();
+
+  private selectFlavorForSlot(slotIndex: number, flavorId: string): void {
+    this.selectedFlavors.set(slotIndex, flavorId);
+    
+    // Update UI to show selection
+    const selectedDisplay = this.querySelector(`#selected-${slotIndex}`);
+    const flavorDef = this.getFlavorDefinition(flavorId);
+    if (selectedDisplay) {
+      selectedDisplay.innerHTML = `<strong>Selected: ${flavorDef?.name || flavorId}</strong>`;
+    }
+
+    // Check if all slots are filled
+    const order = this.mockOrders.find(o => o.orderId === this.currentOrderId);
+    if (order && this.selectedFlavors.size === order.requirements.slots.length) {
+      const confirmBtn = this.querySelector('#confirm-btn');
+      if (confirmBtn) {
+        confirmBtn.removeAttribute('disabled');
+      }
+    }
+  }
+
+  /**
+   * Close flavor selection modal
+   */
+  private closeFlavorSelectionModal(): void {
+    const modal = this.querySelector('#flavor-modal');
     if (modal) {
       modal.style.display = 'none';
+      this.selectedFlavors.clear();
+      this.currentOrderId = null;
     }
   }
 
@@ -618,15 +679,21 @@ export class OrdersScreen extends BaseScreen {
 
     console.log(`Fulfilling ${order.kind} order: ${orderId}`, order);
 
+    // Mark flavors as used for the day
+    this.selectedFlavors.forEach((flavorId) => {
+      this.usedFlavorIds.add(flavorId);
+    });
+
     // Award currency rewards
     this.gameState.addCoins(order.rewards.coins);
     if (order.rewards.diamonds) {
       this.gameState.addDiamonds(order.rewards.diamonds);
     }
 
-    // Create memory for NPC orders
+    // Create memory for NPC orders and track it
+    let newMemoryId: string | undefined;
     if (order.kind === 'NPC' && order.rewards.memoryCandidate) {
-      this.createMockMemory(order.npcId!);
+      newMemoryId = this.createMockMemory(order.npcId!);
     }
 
     // Remove order from list
@@ -649,11 +716,17 @@ export class OrdersScreen extends BaseScreen {
       this._mockOrders = this.mockOrders.filter(o => o.orderId !== orderId);
     }
 
-    // Show success and refresh
-    this.showSuccess(`Order completed! Earned ${order.rewards.coins} coins${order.rewards.diamonds ? ` and ${order.rewards.diamonds} diamonds` : ''}`);
+    // Close modal and navigate to results screen
+    this.closeFlavorSelectionModal();
     
-    this.closeOrderModal();
-    this.updateContent();
+    // Navigate to order results screen with order data
+    this.eventSystem.emit('ui:show_screen', {
+      screenId: 'order-results',
+      data: {
+        order: order,
+        newMemoryId: newMemoryId // Only for NPC orders
+      }
+    });
   }
 
   /**
@@ -671,9 +744,10 @@ export class OrdersScreen extends BaseScreen {
   /**
    * Create mock memory (placeholder)
    */
-  private createMockMemory(npcId: string): void {
+  private createMockMemory(npcId: string): string {
+    const memoryId = `memory_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const memory = {
-      memoryId: `memory_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      memoryId: memoryId,
       npcId: npcId as any,
       createdAt: Date.now(),
       keyframeId: 'placeholder',
@@ -683,6 +757,20 @@ export class OrdersScreen extends BaseScreen {
     };
 
     this.gameState.addMemory(memory);
-    this.showSuccess(`💕 A new memory was created with ${npcId.charAt(0).toUpperCase() + npcId.slice(1)}!`);
+    return memoryId;
+  }
+
+  /**
+   * Get flavor definition
+   */
+  private getFlavorDefinition(flavorId: string): { name: string; affinity: Affinity } | null {
+    // This is a simplified version - in reality, you'd get this from GachaSystem
+    const flavors: Record<string, { name: string; affinity: Affinity }> = {
+      sweet_ambrosia: { name: 'Sweet Ambrosia', affinity: 'Sweet' },
+      salty_umami: { name: 'Salty Umami', affinity: 'Salty' },
+      // Add more as needed
+    };
+    return flavors[flavorId] || null;
   }
 }
+
